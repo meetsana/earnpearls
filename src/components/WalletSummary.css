@@ -1,0 +1,166 @@
+/* ============================================================
+   EarnPearls — Wallet Summary Styles
+   ============================================================ */
+
+.wallet-summary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  color: var(--color-white);
+  box-shadow: var(--shadow-xl);
+}
+
+.wallet-summary__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.wallet-summary__total-pts {
+  font-size: var(--text-4xl);
+  font-weight: var(--font-extrabold);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.wallet-summary__total-usd {
+  font-size: var(--text-lg);
+  opacity: 0.8;
+  margin-top: var(--space-1);
+}
+
+.wallet-summary__lifetime {
+  display: flex;
+  gap: var(--space-6);
+}
+
+.wallet-stat-label {
+  font-size: var(--text-xs);
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--font-medium);
+  margin-bottom: 2px;
+}
+
+.wallet-stat-value {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+}
+
+.wallet-stat-value.warning { color: #FCD34D; }
+.wallet-stat-value.info    { color: #93C5FD; }
+
+/* Balance Blocks */
+.wallet-summary__blocks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .wallet-summary__blocks { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .wallet-summary__blocks { grid-template-columns: 1fr; }
+}
+
+.wallet-block {
+  background: rgba(255,255,255,0.12);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: background var(--transition-fast);
+}
+
+.wallet-block:hover { background: rgba(255,255,255,0.18); }
+
+.wallet-block--withdrawable {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.wallet-block__label {
+  font-size: var(--text-xs);
+  opacity: 0.8;
+  font-weight: var(--font-medium);
+  margin-bottom: var(--space-2);
+}
+
+.wallet-block__points {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  line-height: 1;
+}
+
+.wallet-block__usd {
+  font-size: var(--text-sm);
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.wallet-block__tooltip {
+  font-size: var(--text-xs);
+  opacity: 0.6;
+  margin-top: var(--space-2);
+  font-style: italic;
+}
+
+/* Progress Bar */
+.wallet-summary__progress-bar {
+  display: flex;
+  height: 6px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: rgba(255,255,255,0.15);
+}
+
+.wallet-summary__progress-segment {
+  height: 100%;
+  transition: width var(--transition-slow);
+}
+
+/* Compact Variant */
+.wallet-summary-compact {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-left: 4px solid var(--color-secondary);
+}
+
+.wallet-summary-compact__label {
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: var(--font-medium);
+}
+
+.wallet-summary-compact__value {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--color-secondary);
+  line-height: 1;
+  margin: var(--space-1) 0;
+}
+
+.wallet-summary-compact__pts {
+  font-size: var(--text-sm);
+  color: var(--color-gray-500);
+}
+
+.wallet-summary-compact__stats {
+  display: flex;
+  gap: var(--space-6);
+  text-align: right;
+}

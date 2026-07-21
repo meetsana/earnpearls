@@ -15,6 +15,9 @@ Those choices remain an owner/infrastructure decision. The container boundary ke
 the same build deployable to a managed container service or VM without changing the
 domain model.
 
+For the vendor-neutral staging sequence, acceptance tests, rollback procedure, and
+owner sign-off gates, see [the staging runbook](STAGING-RUNBOOK.md).
+
 ## Local database and API
 
 ```bash

@@ -1,0 +1,54 @@
+{
+  "source": {
+    "lines": 5337,
+    "words": 8313,
+    "bytes": 65976,
+    "sha256": "53ff6b78255a979ed635ed113fb812b8ece5a7ed10933ad84773c9412d0f08f1"
+  },
+  "formal_requirements": 1666,
+  "structural_parents": 204,
+  "may_source_options": 100,
+  "atomicity_splits_still_required": 0,
+  "by_part": {
+    "Part 1": 187,
+    "Part 2": 200,
+    "Part 3": 205,
+    "Part 4": 85,
+    "Part 5": 144,
+    "Part 6": 159,
+    "Part 7": 179,
+    "Part 8": 162,
+    "Part 9": 168,
+    "Part 10": 177
+  },
+  "by_modality": {
+    "MUST": 918,
+    "SHOULD": 748
+  },
+  "by_classification": {
+    "CD": 684,
+    "CBR": 451,
+    "REC": 510,
+    "FRR": 21
+  },
+  "by_type": {
+    "Process": 275,
+    "Non-functional": 147,
+    "Functional": 628,
+    "Deliverable": 449,
+    "Identity": 22,
+    "Quality": 145
+  },
+  "by_delivery_target": {
+    "Pre-implementation deliverable": 695,
+    "V1": 950,
+    "Future": 21
+  },
+  "governance_registers": {
+    "ODR": 28,
+    "DDR": 15,
+    "EFE": 12,
+    "OCR": 3
+  },
+  "status": "APPROVED REQUIREMENTS BASELINE \u2014 PHASE 0 DERIVATION ONLY"
+}

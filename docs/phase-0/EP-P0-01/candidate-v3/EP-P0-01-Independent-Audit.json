@@ -1,0 +1,273 @@
+{
+  "document": "EP-P0-01 independent audit",
+  "source": {
+    "lines": 5337,
+    "words": 8313,
+    "bytes": 65976,
+    "sha256": "53ff6b78255a979ed635ed113fb812b8ece5a7ed10933ad84773c9412d0f08f1"
+  },
+  "formal_requirement_count": 1666,
+  "counts": {
+    "by_part": {
+      "Part 1": 187,
+      "Part 2": 200,
+      "Part 3": 205,
+      "Part 4": 85,
+      "Part 5": 144,
+      "Part 6": 159,
+      "Part 7": 179,
+      "Part 8": 162,
+      "Part 9": 168,
+      "Part 10": 177
+    },
+    "by_modality": {
+      "MUST": 918,
+      "SHOULD": 748
+    },
+    "by_classification": {
+      "CD": 684,
+      "CBR": 451,
+      "REC": 510,
+      "FRR": 21
+    },
+    "by_type": {
+      "Process": 275,
+      "Non-functional": 147,
+      "Functional": 628,
+      "Deliverable": 449,
+      "Identity": 22,
+      "Quality": 145
+    },
+    "by_delivery_target": {
+      "Pre-implementation deliverable": 695,
+      "V1": 950,
+      "Future": 21
+    },
+    "governance_registers": {
+      "ODR": 28,
+      "DDR": 15,
+      "EFE": 12,
+      "OCR": 3
+    }
+  },
+  "checks": [
+    {
+      "name": "Canonical source identity",
+      "passed": true,
+      "details": {
+        "lines": 5337,
+        "words": 8313,
+        "bytes": 65976,
+        "sha256": "53ff6b78255a979ed635ed113fb812b8ece5a7ed10933ad84773c9412d0f08f1"
+      }
+    },
+    {
+      "name": "Required schema fields present",
+      "passed": true,
+      "details": {
+        "missing_columns": [],
+        "column_count": 22
+      }
+    },
+    {
+      "name": "Required values populated",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "name": "Atomic IDs valid and unique",
+      "passed": true,
+      "details": {
+        "invalid": [],
+        "duplicates": [],
+        "count": 1666
+      }
+    },
+    {
+      "name": "Parent references resolve",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Section-by-section coverage reconciles",
+      "passed": true,
+      "details": {
+        "detected_heading_count": 210,
+        "unresolved_headings": [],
+        "duplicate_heading_lines": [],
+        "missing_parent_coverage": [],
+        "unknown_parent_coverage": []
+      }
+    },
+    {
+      "name": "Locators parse and remain in bounds",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Locators stay within declared Part",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Source wording equals cited canonical lines",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Source wording digests match",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Section headings match canonical wording exactly",
+      "passed": true,
+      "details": {
+        "invalid_count": 0,
+        "sample": []
+      }
+    },
+    {
+      "name": "Requirement types use approved taxonomy",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "name": "MAY clauses excluded from formal REQ total",
+      "passed": true,
+      "details": {
+        "count": 0,
+        "ids": []
+      }
+    },
+    {
+      "name": "Explicit source modality matches recorded modality",
+      "passed": true,
+      "details": {
+        "count": 0,
+        "rows": []
+      }
+    },
+    {
+      "name": "Acceptance criteria are requirement-specific and binary",
+      "passed": true,
+      "details": {
+        "generic_count": 0,
+        "sample": []
+      }
+    },
+    {
+      "name": "Mixed-modality citations manually resolved",
+      "passed": true,
+      "details": {
+        "count": 0,
+        "rows": []
+      }
+    },
+    {
+      "name": "Related Phase 0 document IDs resolved",
+      "passed": true,
+      "details": {
+        "count": 0,
+        "sample": []
+      }
+    },
+    {
+      "name": "Atomicity candidates manually resolved",
+      "passed": true,
+      "details": {
+        "count": 0,
+        "sample": []
+      }
+    },
+    {
+      "name": "All normative source lines cited",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "ODR register integrity",
+      "passed": true,
+      "details": {
+        "count": 28,
+        "unique_ids": true,
+        "record_types_valid": true,
+        "derived_labels_valid": true
+      }
+    },
+    {
+      "name": "DDR register integrity",
+      "passed": true,
+      "details": {
+        "count": 15,
+        "unique_ids": true,
+        "record_types_valid": true,
+        "derived_labels_valid": true
+      }
+    },
+    {
+      "name": "EFE register integrity",
+      "passed": true,
+      "details": {
+        "count": 12,
+        "unique_ids": true,
+        "record_types_valid": true,
+        "derived_labels_valid": true
+      }
+    },
+    {
+      "name": "OCR register integrity",
+      "passed": true,
+      "details": {
+        "count": 3,
+        "unique_ids": true,
+        "record_types_valid": true,
+        "derived_labels_valid": true
+      }
+    },
+    {
+      "name": "Governance register dependencies resolve",
+      "passed": true,
+      "details": {
+        "known_record_count": 58,
+        "missing_references": []
+      }
+    },
+    {
+      "name": "Flagged predecessor reassessment complete",
+      "passed": true,
+      "details": {
+        "expected_ids": [
+          "REQ-006",
+          "REQ-009",
+          "REQ-019",
+          "REQ-027",
+          "REQ-031",
+          "REQ-055",
+          "REQ-058",
+          "REQ-076",
+          "REQ-080",
+          "REQ-085"
+        ],
+        "actual_ids": [
+          "REQ-006",
+          "REQ-009",
+          "REQ-019",
+          "REQ-027",
+          "REQ-031",
+          "REQ-055",
+          "REQ-058",
+          "REQ-076",
+          "REQ-080",
+          "REQ-085"
+        ],
+        "records_complete": true
+      }
+    }
+  ],
+  "summary": {
+    "passed_checks": 25,
+    "failed_checks": 0,
+    "verdict": "PASS — ELIGIBLE FOR SEMANTIC REVIEW"
+  }
+}

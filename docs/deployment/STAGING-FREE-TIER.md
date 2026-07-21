@@ -14,7 +14,7 @@ they do not select the production vendors.
 | Queue | PostgreSQL outbox | `email_outbox` with `FOR UPDATE SKIP LOCKED`; no unused Redis |
 | Email | Resend Free | SMTP over implicit TLS on port `2465` |
 | Survey data | Built-in demo adapter | Synthetic records only; no vendor contract or credential |
-| Payout data | Disabled demo methods | Display-only PayPal/Virtual Visa labels; no destination entry or request |
+| Payout data | Disabled demo methods | Display-only PayPal/Virtual Visa labels plus one terminal rejected synthetic history row; no live request |
 
 Base release: PR #3 merge commit
 `81a09c2136e7605332d0f979e549d81387fdad7d`.
@@ -101,8 +101,9 @@ topology in `STAGING-RUNBOOK.md`.
 5. Register a synthetic user, receive the Resend verification email, verify it, sign
    in, sign out, and complete a password reset.
 6. Confirm three demo surveys appear only for eligible synthetic accounts.
-7. Confirm payout cards are labeled demo/disabled, no destination field is shown, and
-   withdrawal creation remains unavailable.
+7. Confirm payout cards are labeled demo/disabled, no destination field is shown,
+   withdrawal creation remains unavailable, and the one rejected history row states
+   that no payout was attempted.
 8. Confirm no real provider, payout, or production secret appears in configuration or
    logs.
 9. Record the staging Git SHA, Render deploy IDs, frontend artifact, Docker image

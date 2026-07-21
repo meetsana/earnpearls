@@ -116,6 +116,11 @@ check(
   "Demo payout methods must remain disabled",
 );
 check(
+  seed.includes("demo-rejected-withdrawal-v1") &&
+    seed.includes("Synthetic staging example; no payout was attempted"),
+  "Synthetic withdrawal history must be terminal and payout-free",
+);
+check(
   ci.includes("branches: [main, staging]") &&
     codeql.includes("branches: [main, staging]"),
   "CI and CodeQL must gate staging pushes",

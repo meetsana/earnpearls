@@ -60,6 +60,42 @@ try {
     ["super_admin"],
   );
 
+  const demoWithdrawal = await database.query<{
+    status: string;
+    payout_reference: string | null;
+    rejection_reason: string | null;
+  }>(
+    `SELECT status, payout_reference, rejection_reason
+     FROM withdrawals
+     WHERE id = '40000000-0000-4000-8000-000000000001'`,
+  );
+  assert.deepEqual(demoWithdrawal.rows, [
+    {
+      status: "rejected",
+      payout_reference: null,
+      rejection_reason: "Synthetic staging example; no payout was attempted",
+    },
+  ]);
+
+  const demoBalances = await database.query<{
+    withdrawable_points: string;
+    reserved_points: string;
+  }>(
+    `SELECT
+       COALESCE(SUM(points_delta) FILTER (WHERE bucket = 'withdrawable'), 0)::TEXT
+         AS withdrawable_points,
+       COALESCE(SUM(points_delta) FILTER (WHERE bucket = 'reserved'), 0)::TEXT
+         AS reserved_points
+     FROM wallet_entries
+     WHERE user_id = (
+       SELECT id FROM users WHERE email = $1
+     )`,
+    [process.env.SEED_ADMIN_EMAIL?.toLowerCase()],
+  );
+  assert.deepEqual(demoBalances.rows, [
+    { withdrawable_points: "5000", reserved_points: "0" },
+  ]);
+
   process.stdout.write("Staging PostgreSQL seed verification: passed\n");
 } finally {
   await database.close();

@@ -24,6 +24,16 @@ Implemented backend surfaces:
 - Super Admin dashboard, moderation history, withdrawal review, reconciliation, and audit logs;
 - SMTP outbox worker, PostgreSQL migrations, OpenAPI, Docker, CI, and CodeQL.
 
+Implemented frontend surfaces:
+
+- responsive public, authentication, dashboard, surveys, wallet, withdrawals, and security routes;
+- capability-filtered navigation and capability-gated admin routes;
+- one typed API boundary with cookie credentials, session-bound CSRF, canonical errors,
+  and withdrawal idempotency;
+- exact `BigInt` point calculations and server-formatted USD display;
+- loading, empty, access-denied, rate-limit, conflict, network, and server-error states;
+- unit, contract-boundary, capability, withdrawal-disabled, and accessibility tests.
+
 ## Architecture
 
 ```text
@@ -41,6 +51,7 @@ Key paths:
 - `packages/contracts` — shared runtime schemas and frontend types
 - `docs/api/openapi.json` — generated API contract
 - `docs/implementation` — architecture and 24-hour build controls
+- `docs/frontend` — frontend architecture, API matrix, QA evidence, and change log
 - `docs/handoffs` — parallel Opus 4.8 frontend prompt
 - `infra` — Docker development and deployment baseline
 
@@ -54,6 +65,8 @@ npm install
 npm run db:migrate
 npm run db:seed
 npm run dev:api
+# In a second terminal:
+npm run dev
 ```
 
 Run the full local quality gate:

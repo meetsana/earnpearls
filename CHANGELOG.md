@@ -4,6 +4,11 @@
 
 ### Added
 
+- Contract-integrated React/TypeScript frontend with public auth flows, authenticated
+  app shell, dashboard, surveys, wallet, withdrawals, session management, and admin views.
+- Capability-absent navigation, exact-money helpers, session CSRF forwarding, canonical
+  API error parsing, and stable withdrawal idempotency-key reuse for identical retries.
+- Frontend unit, API-boundary, route-contract, accessibility, and disabled-withdrawal tests.
 - TypeScript npm workspace and shared TypeBox API contracts.
 - Fastify API with stable error envelopes, OpenAPI, health checks, CORS allowlist,
   security headers, body limits, rate limits, structured logging, and secret redaction.

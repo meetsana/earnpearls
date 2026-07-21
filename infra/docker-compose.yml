@@ -1,0 +1,87 @@
+name: earnpearls
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: earnpearls
+      POSTGRES_USER: earnpearls
+      POSTGRES_PASSWORD: earnpearls-local-only
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U earnpearls -d earnpearls"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: infra/docker/api.Dockerfile
+    command: ["node", "dist/db/migrate.js"]
+    environment: &api-environment
+      NODE_ENV: development
+      DATABASE_URL: postgres://earnpearls:earnpearls-local-only@postgres:5432/earnpearls
+      DATABASE_SSL: "false"
+      APP_ORIGINS: http://localhost:5173
+      PUBLIC_APP_URL: http://localhost:5173
+      PASSWORD_PEPPER: local-password-pepper-change-me
+      IP_HASH_SECRET: local-ip-hash-secret-change-me
+      DATA_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      PROVIDER_WEBHOOK_SECRET: local-demo-provider-secret
+      ENABLE_SWAGGER: "true"
+      ALLOW_DEMO_DATA: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      <<: *api-environment
+      HOST: 0.0.0.0
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  email-worker:
+    profiles: ["email"]
+    build:
+      context: ..
+      dockerfile: infra/docker/api.Dockerfile
+    command: ["node", "dist/workers/email.js"]
+    environment:
+      <<: *api-environment
+      SMTP_URL: ${SMTP_URL:?Set SMTP_URL to enable the email profile}
+      EMAIL_FROM: ${EMAIL_FROM:-EarnPearls <no-reply@example.com>}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  seed:
+    profiles: ["tools"]
+    build:
+      context: ..
+      dockerfile: infra/docker/api.Dockerfile
+    command: ["node", "dist/db/seed.js"]
+    environment:
+      <<: *api-environment
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:?Set SEED_ADMIN_EMAIL}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD}
+      SEED_ADMIN_COUNTRY: ${SEED_ADMIN_COUNTRY:-US}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-data:

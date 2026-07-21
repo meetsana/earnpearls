@@ -1,161 +1,96 @@
-# 💎 EarnPearls UI — Component Library
+# EarnPearls
 
-> **"Your Time. Your Rewards."** — A complete, production-ready UI component set for the EarnPearls rewards platform.
+> **Your Time. Your Rewards.**
 
----
+EarnPearls is a global rewards-platform project whose focused Version 1 centers on
+surveys, transparent wallet states, configurable withdrawals, trust, and scalable
+operations.
 
-## 📚 Table of Contents
+## Current status
 
-1. [Overview](#overview)
-2. [Project Structure](#project-structure)
-3. [Components](#components)
-4. [Pages](#pages)
-5. [Design System](#design-system)
-6. [Getting Started](#getting-started)
+The production-oriented MVP build is **in progress**. This repository is not yet a
+production release and does not activate any real survey provider or payout method.
+The governance and requirements remediation is under review in
+[draft PR #1](https://github.com/meetsana/earnpearls/pull/1).
 
----
+Implemented backend surfaces:
 
-## Overview
+- email/password registration, verification, login, reset, and revocable sessions;
+- capability-based authorization with reusable Limit Template denials;
+- user dashboard and exact integer money/points contracts;
+- append-only Pending → Validated → Mature → Withdrawable wallet lifecycle;
+- modular survey-provider adapters and signed/idempotent provider events;
+- default-off configurable withdrawals with encrypted destinations;
+- Super Admin dashboard, moderation history, withdrawal review, reconciliation, and audit logs;
+- SMTP outbox worker, PostgreSQL migrations, OpenAPI, Docker, CI, and CodeQL.
 
-EarnPearls is a GPT-class survey rewards platform where users earn points for completing surveys and redeem them for real cash via PayPal, Virtual Visa, or Cryptocurrency.
+Implemented frontend surfaces:
 
-- **Currency**: 1,000 points = $1 USD (configurable)
-- **Balance Lifecycle**: Pending → Validated → Mature → Withdrawable → Paid
-- **Markets**: US, UK, Canada, Ireland, Australia, Germany, Belgium, EU, Saudi Arabia, UAE, Qatar, Oman, Bahrain
-- **Primary Color**: `#1A3C6E` (Deep Blue)
-- **Secondary Color**: `#10B981` (Emerald Green)
+- responsive public, authentication, dashboard, surveys, wallet, withdrawals, and security routes;
+- capability-filtered navigation and capability-gated admin routes;
+- one typed API boundary with cookie credentials, session-bound CSRF, canonical errors,
+  and withdrawal idempotency;
+- exact `BigInt` point calculations and server-formatted USD display;
+- loading, empty, access-denied, rate-limit, conflict, network, and server-error states;
+- unit, contract-boundary, capability, withdrawal-disabled, and accessibility tests.
 
----
+## Architecture
 
-## Project Structure
-
-```
-earnpearls/
-├── index.html               ← Live component showcase (open in browser!)
-├── package.json
-├── README.md
-└└── src/
-    ├── styles/
-    │   ├── tokens.css           ← Design token system
-    │   └── global.css           ← Global styles & utilities
-    ├── components/
-    │   ├── Button.jsx/css       ← 5 variants, 3 sizes, loading state
-    │   ├── Card.jsx/css         ← Card + StatCard
-    │   ├── Badge.jsx/css        ← Badge + StatusBadge
-    │   ├── Input.jsx/css        ← Input, Select, Textarea, Checkbox
-    │   ├── Navbar.jsx/css       ← Responsive nav w/ dropdowns
-    │   ├── Sidebar.jsx/css      ← Collapsible sidebar navigation
-    │   ├── WalletSummary.jsx/css← Wallet balance display
-    │   ├── SurveyCard.jsx/css   ← Survey card + SurveyGrid
-    │   ├── TransactionRow.jsx/css ← Transaction table
-    │   ├── Leaderboard.jsx/css  ← Leaderboard table
-    │   ├── Modal.jsx/css        ← Modal + ConfirmModal
-    │   └── Toast.jsx/css        ← Toast notifications + useToast hook
-    └── pages/
-        ├── Dashboard.jsx/css    ← Main dashboard page
-        ├── WalletPage.jsx       ← Wallet & withdrawal page
-        ├── SurveysPage.jsx      ← Surveys list with filters
-        ├── LeaderboardPage.jsx  ← Full leaderboard + podium
-        ├── ProfilePage.jsx      ← User profile & settings
-        └── shared.css           ← Shared page styles
+```text
+React/Vite frontend → Fastify API → PostgreSQL
+                           ├── provider adapters
+                           └── email outbox worker → SMTP
 ```
 
----
+The backend is a TypeScript modular monolith. PostgreSQL is the transactional source
+of truth. Provider adapters and deployment vendors remain replaceable boundaries.
 
-## Components
+Key paths:
 
-### Button
-```jsx
-import Button from './src/components/Button';
+- `apps/api` — API, migrations, workers, and tests
+- `packages/contracts` — shared runtime schemas and frontend types
+- `docs/api/openapi.json` — generated API contract
+- `docs/implementation` — architecture and 24-hour build controls
+- `docs/frontend` — frontend architecture, API matrix, QA evidence, and change log
+- `docs/handoffs` — parallel Opus 4.8 frontend prompt
+- `infra` — Docker development and deployment baseline
 
-<Button variant="primary" size="md">Click Me</Button>
-<Button variant="secondary" loading>Loading...</Button>
-<Button variant="danger" fullWidth>Delete</Button>
-```
-Variants: `primary` `secondary` `outline` `danger` `ghost` `text`
-Sizes: `sm` `md` `lg`
+## Local setup
 
-### SurveyCard
-```jsx
-import { SurveyGrid } from './src/components/SurveyCard';
-
-<SurveyGrid surveys={surveys} onStart={handleStart} conversionRate={1000} />
-```
-
-### WalletSummary
-```jsx
-import WalletSummary from './src/components/WalletSummary';
-
-<WalletSummary
-  pending={3400}
-  validated={5200}
-  mature={8100}
-  withdrawable={48200}
-  totalEarned={284500}
-  totalWithdrawn={220000}
-  conversionRate={1000}
-/>
-```
-
-### Toast
-```jsx
-import { useToast, ToastContainer } from './src/components/Toast';
-
-function App() {
-  const toast = useToast();
-  return (
-    <>
-      <button onClick={() => toast.points(250, '0.25')}>Earn Points</button>
-      <ToastContainer toasts={toast.toasts} onDismiss={toast.dismiss} />
-    </>
-  );
-}
-```
-
-### Modal
-```jsx
-import Modal, { ConfirmModal } from './src/components/Modal';
-
-<Modal isOpen={open} onClose={() => setOpen(false)} title="My Modal">
-  Modal content here
-</Modal>
-
-<ConfirmModal
-  isOpen={confirmOpen}
-  onClose={() => setConfirmOpen(false)}
-  onConfirm={handleDelete}
-  title="Delete account?"
-  message="This action cannot be undone."
-  variant="danger"
-/>
-```
-
----
-
-## Design System
-
-All design tokens are in `src/styles/tokens.css`.
-
-| Token | Value |
-|-------|-------|
-| `--color-primary` | `#1A3C6E` |
-| `--color-secondary` | `#10B981` |
-| `--color-white` | `#FFFFFF` |
-| `--sidebar-width` | `260px` |
-| `--navbar-height` | `64px` |
-
----
-
-## Getting Started
+Requirements: Node.js 24+, npm 11+, and PostgreSQL 17+ (or Docker Compose).
 
 ```bash
-# Install dependencies
+cp .env.example .env
 npm install
-
-# Start dev server
+npm run db:migrate
+npm run db:seed
+npm run dev:api
+# In a second terminal:
 npm run dev
-
-# Or just open index.html in your browser for a full showcase!
 ```
 
-> © 2025 EarnPearls. Your Time. Your Rewards.
+Run the full local quality gate:
+
+```bash
+npm run check
+```
+
+Or start PostgreSQL and the API with containers:
+
+```bash
+docker compose -f infra/docker-compose.yml up --build postgres migrate api
+```
+
+Development API documentation is served at `http://localhost:3001/documentation`.
+
+## Policy-safe defaults
+
+- Points use a configurable default conversion of 1,000 points = USD 1.00.
+- USD is the accounting source of truth; local currency is not fabricated.
+- Pending earnings validate only through provider confirmation or verified reconciliation.
+- Real providers, payout methods, KYC triggers, fees, thresholds, and maturity rules remain disabled
+  until their owner decisions and external evidence are complete.
+- Named initial launch countries are enabled in the database; Pakistan, India, Bangladesh, and
+  China are blocked from initial public registration.
+
+See [deployment controls](docs/deployment/README.md) and [security policy](SECURITY.md).

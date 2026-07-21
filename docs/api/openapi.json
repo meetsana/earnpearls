@@ -1,0 +1,3894 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "EarnPearls API",
+    "description": "Version 1 API for authentication, surveys, wallet, withdrawals, and administration.",
+    "version": "0.1.0"
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "ep_session",
+        "description": "Opaque, revocable HttpOnly session cookie."
+      },
+      "csrfToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "Session-bound token required for authenticated state changes."
+      },
+      "providerSignature": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Provider-Signature",
+        "description": "Provider-adapter-specific webhook signature."
+      }
+    },
+    "schemas": {}
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password",
+                  "displayName",
+                  "countryCode"
+                ],
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "maxLength": 254,
+                    "type": "string"
+                  },
+                  "password": {
+                    "minLength": 12,
+                    "maxLength": 128,
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "countryCode": {
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "current",
+                      "userAgent",
+                      "createdAt",
+                      "lastSeenAt",
+                      "expiresAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "current": {
+                        "type": "boolean"
+                      },
+                      "userAgent": {
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "lastSeenAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "expiresAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions/{sessionId}": {
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "sessionId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "maxLength": 254,
+                    "type": "string"
+                  },
+                  "password": {
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "authenticated",
+                    "user"
+                  ],
+                  "properties": {
+                    "authenticated": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "user": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "countryCode",
+                        "accountStatus",
+                        "emailVerified",
+                        "createdAt"
+                      ],
+                      "properties": {
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "email": {
+                          "format": "email",
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "countryCode": {
+                          "minLength": 2,
+                          "maxLength": 2,
+                          "pattern": "^[A-Z]{2}$",
+                          "type": "string"
+                        },
+                        "accountStatus": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "active"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "limited"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "suspended"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "disabled"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "archived"
+                              ]
+                            }
+                          ]
+                        },
+                        "emailVerified": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token"
+                ],
+                "properties": {
+                  "token": {
+                    "minLength": 40,
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/password-reset/request": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "maxLength": 254,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/password-reset/confirm": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token",
+                  "password"
+                ],
+                "properties": {
+                  "token": {
+                    "minLength": 40,
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "password": {
+                    "minLength": 12,
+                    "maxLength": 128,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/session": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "authenticated",
+                    "user",
+                    "capabilities"
+                  ],
+                  "properties": {
+                    "authenticated": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "user": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "email",
+                        "displayName",
+                        "countryCode",
+                        "accountStatus",
+                        "emailVerified",
+                        "createdAt"
+                      ],
+                      "properties": {
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "email": {
+                          "format": "email",
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "countryCode": {
+                          "minLength": 2,
+                          "maxLength": 2,
+                          "pattern": "^[A-Z]{2}$",
+                          "type": "string"
+                        },
+                        "accountStatus": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "active"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "limited"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "suspended"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "disabled"
+                              ]
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "archived"
+                              ]
+                            }
+                          ]
+                        },
+                        "emailVerified": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "wallet",
+                    "availableSurveyCount",
+                    "recentTransactions",
+                    "activeWithdrawal",
+                    "announcements"
+                  ],
+                  "properties": {
+                    "wallet": {
+                      "type": "object",
+                      "required": [
+                        "pending",
+                        "validated",
+                        "mature",
+                        "withdrawable",
+                        "reserved",
+                        "paid",
+                        "rejected",
+                        "reversed",
+                        "totalEarnings",
+                        "conversion"
+                      ],
+                      "properties": {
+                        "pending": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "validated": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "mature": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "withdrawable": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "reserved": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "paid": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "rejected": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "reversed": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "totalEarnings": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "conversion": {
+                          "type": "object",
+                          "required": [
+                            "pointsPerUsd",
+                            "sourceCurrency",
+                            "localCurrencyEstimate"
+                          ],
+                          "properties": {
+                            "pointsPerUsd": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "sourceCurrency": {
+                              "type": "string",
+                              "enum": [
+                                "USD"
+                              ]
+                            },
+                            "localCurrencyEstimate": {
+                              "type": "null"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "availableSurveyCount": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "recentTransactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "kind",
+                          "currentBucket",
+                          "amount",
+                          "description",
+                          "estimatedMaturityAt",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "currentBucket": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "pending"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "validated"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "mature"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "withdrawable"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "reserved"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "paid"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "rejected"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "reversed"
+                                ]
+                              }
+                            ]
+                          },
+                          "amount": {
+                            "type": "object",
+                            "required": [
+                              "points",
+                              "usdMicros",
+                              "usd"
+                            ],
+                            "properties": {
+                              "points": {
+                                "pattern": "^-?[0-9]+$",
+                                "type": "string"
+                              },
+                              "usdMicros": {
+                                "pattern": "^-?[0-9]+$",
+                                "type": "string"
+                              },
+                              "usd": {
+                                "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "providerLabel": {
+                            "type": "string"
+                          },
+                          "estimatedMaturityAt": {
+                            "anyOf": [
+                              {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "activeWithdrawal": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "methodCode",
+                            "amount",
+                            "fee",
+                            "status",
+                            "destinationMasked",
+                            "requestedAt",
+                            "updatedAt",
+                            "processedAt",
+                            "rejectionReason"
+                          ],
+                          "properties": {
+                            "id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "methodCode": {
+                              "type": "string"
+                            },
+                            "amount": {
+                              "type": "object",
+                              "required": [
+                                "points",
+                                "usdMicros",
+                                "usd"
+                              ],
+                              "properties": {
+                                "points": {
+                                  "pattern": "^-?[0-9]+$",
+                                  "type": "string"
+                                },
+                                "usdMicros": {
+                                  "pattern": "^-?[0-9]+$",
+                                  "type": "string"
+                                },
+                                "usd": {
+                                  "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "fee": {
+                              "type": "object",
+                              "required": [
+                                "points",
+                                "usdMicros",
+                                "usd"
+                              ],
+                              "properties": {
+                                "points": {
+                                  "pattern": "^-?[0-9]+$",
+                                  "type": "string"
+                                },
+                                "usdMicros": {
+                                  "pattern": "^-?[0-9]+$",
+                                  "type": "string"
+                                },
+                                "usd": {
+                                  "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "status": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "requested"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "under_review"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "approved"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "processing"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "paid"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "rejected"
+                                  ]
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "cancelled"
+                                  ]
+                                }
+                              ]
+                            },
+                            "destinationMasked": {
+                              "type": "string"
+                            },
+                            "requestedAt": {
+                              "format": "date-time",
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "format": "date-time",
+                              "type": "string"
+                            },
+                            "processedAt": {
+                              "anyOf": [
+                                {
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "rejectionReason": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "announcements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "title",
+                          "body",
+                          "severity"
+                        ],
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "severity": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "info"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "success"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "warning"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "danger"
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wallet/": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "pending",
+                    "validated",
+                    "mature",
+                    "withdrawable",
+                    "reserved",
+                    "paid",
+                    "rejected",
+                    "reversed",
+                    "totalEarnings",
+                    "conversion"
+                  ],
+                  "properties": {
+                    "pending": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "validated": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "mature": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "withdrawable": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "reserved": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "paid": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "rejected": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "reversed": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "totalEarnings": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "conversion": {
+                      "type": "object",
+                      "required": [
+                        "pointsPerUsd",
+                        "sourceCurrency",
+                        "localCurrencyEstimate"
+                      ],
+                      "properties": {
+                        "pointsPerUsd": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "sourceCurrency": {
+                          "type": "string",
+                          "enum": [
+                            "USD"
+                          ]
+                        },
+                        "localCurrencyEstimate": {
+                          "type": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wallet/transactions": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "maxLength": 500,
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25,
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "kind",
+                          "currentBucket",
+                          "amount",
+                          "description",
+                          "estimatedMaturityAt",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "currentBucket": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "pending"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "validated"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "mature"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "withdrawable"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "reserved"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "paid"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "rejected"
+                                ]
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "reversed"
+                                ]
+                              }
+                            ]
+                          },
+                          "amount": {
+                            "type": "object",
+                            "required": [
+                              "points",
+                              "usdMicros",
+                              "usd"
+                            ],
+                            "properties": {
+                              "points": {
+                                "pattern": "^-?[0-9]+$",
+                                "type": "string"
+                              },
+                              "usdMicros": {
+                                "pattern": "^-?[0-9]+$",
+                                "type": "string"
+                              },
+                              "usd": {
+                                "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "providerLabel": {
+                            "type": "string"
+                          },
+                          "estimatedMaturityAt": {
+                            "anyOf": [
+                              {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "nextCursor": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/surveys/": {
+      "get": {
+        "tags": [
+          "Surveys"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "title",
+                      "reward",
+                      "estimatedMinutes",
+                      "difficulty",
+                      "category",
+                      "deviceCompatibility",
+                      "countryEligible",
+                      "available"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "reward": {
+                        "type": "object",
+                        "required": [
+                          "points",
+                          "usdMicros",
+                          "usd"
+                        ],
+                        "properties": {
+                          "points": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usdMicros": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usd": {
+                            "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "estimatedMinutes": {
+                        "anyOf": [
+                          {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "difficulty": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "category": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "deviceCompatibility": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "countryEligible": {
+                        "type": "boolean"
+                      },
+                      "available": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/surveys/{surveyId}/start": {
+      "post": {
+        "tags": [
+          "Surveys"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "surveyId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "participationId",
+                    "launchUrl",
+                    "status"
+                  ],
+                  "properties": {
+                    "participationId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "launchUrl": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "started"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/surveys/providers/{providerCode}/webhook": {
+      "post": {
+        "tags": [
+          "Provider Webhooks"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            },
+            "in": "path",
+            "name": "providerCode",
+            "required": true
+          },
+          {
+            "schema": {
+              "maxLength": 500,
+              "type": "string"
+            },
+            "in": "header",
+            "name": "x-provider-signature",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "providerSignature": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/withdrawals/methods": {
+      "get": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "code",
+                      "displayName",
+                      "enabled",
+                      "minimum",
+                      "fee",
+                      "supportedForUser"
+                    ],
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "minimum": {
+                        "type": "object",
+                        "required": [
+                          "points",
+                          "usdMicros",
+                          "usd"
+                        ],
+                        "properties": {
+                          "points": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usdMicros": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usd": {
+                            "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "fee": {
+                        "type": "object",
+                        "required": [
+                          "points",
+                          "usdMicros",
+                          "usd"
+                        ],
+                        "properties": {
+                          "points": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usdMicros": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usd": {
+                            "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "supportedForUser": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/withdrawals/": {
+      "get": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "methodCode",
+                      "amount",
+                      "fee",
+                      "status",
+                      "destinationMasked",
+                      "requestedAt",
+                      "updatedAt",
+                      "processedAt",
+                      "rejectionReason"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "methodCode": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "object",
+                        "required": [
+                          "points",
+                          "usdMicros",
+                          "usd"
+                        ],
+                        "properties": {
+                          "points": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usdMicros": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usd": {
+                            "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "fee": {
+                        "type": "object",
+                        "required": [
+                          "points",
+                          "usdMicros",
+                          "usd"
+                        ],
+                        "properties": {
+                          "points": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usdMicros": {
+                            "pattern": "^-?[0-9]+$",
+                            "type": "string"
+                          },
+                          "usd": {
+                            "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "status": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "requested"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "under_review"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "approved"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "processing"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "paid"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "rejected"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "cancelled"
+                            ]
+                          }
+                        ]
+                      },
+                      "destinationMasked": {
+                        "type": "string"
+                      },
+                      "requestedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "processedAt": {
+                        "anyOf": [
+                          {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "rejectionReason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "methodCode",
+                  "points",
+                  "destination"
+                ],
+                "properties": {
+                  "methodCode": {
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "type": "string"
+                  },
+                  "points": {
+                    "pattern": "^[1-9][0-9]*$",
+                    "type": "string"
+                  },
+                  "destination": {
+                    "minLength": 3,
+                    "maxLength": 500,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "minLength": 16,
+              "maxLength": 200,
+              "type": "string"
+            },
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "methodCode",
+                    "amount",
+                    "fee",
+                    "status",
+                    "destinationMasked",
+                    "requestedAt",
+                    "updatedAt",
+                    "processedAt",
+                    "rejectionReason"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "methodCode": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "fee": {
+                      "type": "object",
+                      "required": [
+                        "points",
+                        "usdMicros",
+                        "usd"
+                      ],
+                      "properties": {
+                        "points": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usdMicros": {
+                          "pattern": "^-?[0-9]+$",
+                          "type": "string"
+                        },
+                        "usd": {
+                          "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "status": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "requested"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "under_review"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "approved"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "processing"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "paid"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "rejected"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "cancelled"
+                          ]
+                        }
+                      ]
+                    },
+                    "destinationMasked": {
+                      "type": "string"
+                    },
+                    "requestedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "processedAt": {
+                      "anyOf": [
+                        {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rejectionReason": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dashboard": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "users",
+                    "surveys",
+                    "withdrawals",
+                    "providers"
+                  ],
+                  "properties": {
+                    "users": {
+                      "type": "object",
+                      "required": [
+                        "total",
+                        "verified",
+                        "limited"
+                      ],
+                      "properties": {
+                        "total": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "verified": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "limited": {
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "surveys": {
+                      "type": "object",
+                      "required": [
+                        "available",
+                        "pendingParticipations"
+                      ],
+                      "properties": {
+                        "available": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "pendingParticipations": {
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "withdrawals": {
+                      "type": "object",
+                      "required": [
+                        "requested",
+                        "reserved"
+                      ],
+                      "properties": {
+                        "requested": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "reserved": {
+                          "type": "object",
+                          "required": [
+                            "points",
+                            "usdMicros",
+                            "usd"
+                          ],
+                          "properties": {
+                            "points": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usdMicros": {
+                              "pattern": "^-?[0-9]+$",
+                              "type": "string"
+                            },
+                            "usd": {
+                              "pattern": "^-?[0-9]+\\.[0-9]{6}$",
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "providers": {
+                      "type": "object",
+                      "required": [
+                        "enabled",
+                        "degraded"
+                      ],
+                      "properties": {
+                        "enabled": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "degraded": {
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "in": "query",
+            "name": "search",
+            "required": false
+          },
+          {
+            "schema": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "email",
+                      "displayName",
+                      "countryCode",
+                      "accountStatus",
+                      "emailVerified",
+                      "limitTemplateId",
+                      "createdAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "email": {
+                        "format": "email",
+                        "type": "string"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "countryCode": {
+                        "type": "string"
+                      },
+                      "accountStatus": {
+                        "type": "string"
+                      },
+                      "emailVerified": {
+                        "type": "boolean"
+                      },
+                      "limitTemplateId": {
+                        "anyOf": [
+                          {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{userId}/account-state": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "accountStatus",
+                  "reason"
+                ],
+                "properties": {
+                  "accountStatus": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "active"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "limited"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "suspended"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "disabled"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "archived"
+                        ]
+                      }
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 3,
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "limitTemplateId": {
+                    "anyOf": [
+                      {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/limit-templates": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "code",
+                      "name",
+                      "description",
+                      "active",
+                      "deniedPermissions",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "deniedPermissions": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name",
+                  "deniedPermissions"
+                ],
+                "properties": {
+                  "code": {
+                    "pattern": "^[a-z][a-z0-9_]{2,63}$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 3,
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "description": {
+                    "maxLength": 1000,
+                    "default": "",
+                    "type": "string"
+                  },
+                  "active": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "deniedPermissions": {
+                    "maxItems": 100,
+                    "uniqueItems": true,
+                    "type": "array",
+                    "items": {
+                      "minLength": 3,
+                      "maxLength": 100,
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "description",
+                    "active",
+                    "deniedPermissions",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "deniedPermissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/limit-templates/{templateId}": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "description",
+                  "active",
+                  "deniedPermissions"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 3,
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "description": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "deniedPermissions": {
+                    "maxItems": 100,
+                    "uniqueItems": true,
+                    "type": "array",
+                    "items": {
+                      "minLength": 3,
+                      "maxLength": 100,
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "templateId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "description",
+                    "active",
+                    "deniedPermissions",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "deniedPermissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/limit-templates/{templateId}/clone": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name"
+                ],
+                "properties": {
+                  "code": {
+                    "pattern": "^[a-z][a-z0-9_]{2,63}$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 3,
+                    "maxLength": 100,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "templateId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "description",
+                    "active",
+                    "deniedPermissions",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "deniedPermissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/withdrawals": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "userId",
+                      "userEmail",
+                      "methodCode",
+                      "points",
+                      "status",
+                      "destinationMasked",
+                      "requestedAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "userId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "userEmail": {
+                        "format": "email",
+                        "type": "string"
+                      },
+                      "methodCode": {
+                        "type": "string"
+                      },
+                      "points": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "destinationMasked": {
+                        "type": "string"
+                      },
+                      "requestedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/withdrawals/{withdrawalId}/approve": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "minLength": 3,
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "payoutReference": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "withdrawalId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/withdrawals/{withdrawalId}/reject": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "minLength": 3,
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "payoutReference": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "withdrawalId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/withdrawals/{withdrawalId}/mark-paid": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "minLength": 3,
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "payoutReference": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "withdrawalId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/participations/{participationId}/validate": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "providerEventReference",
+                  "reason"
+                ],
+                "properties": {
+                  "providerEventReference": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 3,
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "estimatedMaturityAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "participationId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/participations/{participationId}/reject": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "providerEventReference",
+                  "reason"
+                ],
+                "properties": {
+                  "providerEventReference": {
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 3,
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "estimatedMaturityAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "participationId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/wallet-transactions/{transactionId}/mark-mature": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "evidenceReference",
+                  "reason"
+                ],
+                "properties": {
+                  "evidenceReference": {
+                    "minLength": 3,
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 3,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "transactionId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/wallet-transactions/{transactionId}/mark-withdrawable": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "evidenceReference",
+                  "reason"
+                ],
+                "properties": {
+                  "evidenceReference": {
+                    "minLength": 3,
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 3,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "transactionId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": [],
+            "csrfToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "message"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/audit-logs": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            },
+            "in": "query",
+            "name": "action",
+            "required": false
+          },
+          {
+            "schema": {
+              "minimum": 1,
+              "maximum": 200,
+              "default": 100,
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "actorType",
+                      "actorId",
+                      "action",
+                      "targetType",
+                      "targetId",
+                      "reason",
+                      "outcome",
+                      "createdAt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "actorType": {
+                        "type": "string"
+                      },
+                      "actorId": {
+                        "anyOf": [
+                          {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "action": {
+                        "type": "string"
+                      },
+                      "targetType": {
+                        "type": "string"
+                      },
+                      "targetId": {
+                        "type": "string"
+                      },
+                      "reason": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "outcome": {
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "/v1",
+      "description": "Current origin"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Dashboard"
+    },
+    {
+      "name": "Wallet"
+    },
+    {
+      "name": "Surveys"
+    },
+    {
+      "name": "Withdrawals"
+    },
+    {
+      "name": "Admin"
+    },
+    {
+      "name": "Provider Webhooks"
+    },
+    {
+      "name": "Health"
+    }
+  ]
+}

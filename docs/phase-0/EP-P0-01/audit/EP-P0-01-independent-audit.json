@@ -1,0 +1,776 @@
+{
+  "document": "EP-P0-01 independent audit",
+  "source": {
+    "lines": 5337,
+    "words": 8313,
+    "bytes": 65976,
+    "sha256": "53ff6b78255a979ed635ed113fb812b8ece5a7ed10933ad84773c9412d0f08f1"
+  },
+  "formal_requirement_count": 1392,
+  "counts": {
+    "by_part": {
+      "Part 1": 143,
+      "Part 2": 188,
+      "Part 3": 202,
+      "Part 4": 87,
+      "Part 5": 147,
+      "Part 6": 168,
+      "Part 7": 106,
+      "Part 8": 107,
+      "Part 9": 112,
+      "Part 10": 132
+    },
+    "by_modality": {
+      "MUST": 756,
+      "MAY": 24,
+      "SHOULD": 612
+    },
+    "by_classification": {
+      "CD": 533,
+      "FRR": 26,
+      "CBR": 450,
+      "REC": 383
+    },
+    "by_type": {
+      "Governance": 99,
+      "Non-functional": 115,
+      "Documentation": 333,
+      "Functional": 380,
+      "Business Rule": 88,
+      "Security": 76,
+      "Data": 130,
+      "Compliance": 19,
+      "API": 75,
+      "Operational": 77
+    },
+    "by_delivery_target": {
+      "Pre-implementation deliverable": 506,
+      "V1": 860,
+      "Future": 26
+    },
+    "governance_registers": {
+      "ODR": 27,
+      "DDR": 14,
+      "EFE": 12,
+      "OCR": 3
+    }
+  },
+  "checks": [
+    {
+      "name": "Canonical source identity",
+      "passed": true,
+      "details": {
+        "lines": 5337,
+        "words": 8313,
+        "bytes": 65976,
+        "sha256": "53ff6b78255a979ed635ed113fb812b8ece5a7ed10933ad84773c9412d0f08f1"
+      }
+    },
+    {
+      "name": "Required schema fields present",
+      "passed": true,
+      "details": {
+        "missing_columns": [],
+        "column_count": 19
+      }
+    },
+    {
+      "name": "Required values populated",
+      "passed": true,
+      "details": {}
+    },
+    {
+      "name": "Atomic IDs valid and unique",
+      "passed": true,
+      "details": {
+        "invalid": [],
+        "duplicates": [],
+        "count": 1392
+      }
+    },
+    {
+      "name": "Parent references resolve",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Locators parse and remain in bounds",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Locators stay within declared Part",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Source wording equals cited canonical lines",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Source wording digests match",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "Section headings match canonical wording exactly",
+      "passed": false,
+      "details": {
+        "invalid_count": 1329,
+        "sample": [
+          "REQ-001.01",
+          "REQ-001.02",
+          "REQ-001.03",
+          "REQ-001.04",
+          "REQ-001.05",
+          "REQ-001.06",
+          "REQ-001.07",
+          "REQ-001.08",
+          "REQ-001.09",
+          "REQ-001.10",
+          "REQ-001.11",
+          "REQ-002.01",
+          "REQ-002.02",
+          "REQ-002.03",
+          "REQ-002.04",
+          "REQ-002.05",
+          "REQ-002.06",
+          "REQ-002.07",
+          "REQ-002.08",
+          "REQ-002.09",
+          "REQ-002.10",
+          "REQ-002.11",
+          "REQ-002.12",
+          "REQ-002.13",
+          "REQ-002.14",
+          "REQ-002.15",
+          "REQ-002.16",
+          "REQ-002.17",
+          "REQ-002.18",
+          "REQ-002.19",
+          "REQ-002.20",
+          "REQ-002.21",
+          "REQ-002.22",
+          "REQ-002.23",
+          "REQ-002.24",
+          "REQ-002.25",
+          "REQ-002.26",
+          "REQ-002.27",
+          "REQ-002.28",
+          "REQ-002.29",
+          "REQ-002.30",
+          "REQ-002.31",
+          "REQ-002.32",
+          "REQ-002.33",
+          "REQ-002.34",
+          "REQ-002.35",
+          "REQ-002.36",
+          "REQ-002.37",
+          "REQ-002.38",
+          "REQ-002.39"
+        ]
+      }
+    },
+    {
+      "name": "Requirement types use approved taxonomy",
+      "passed": false,
+      "details": {
+        "Governance": 99,
+        "Documentation": 333,
+        "Business Rule": 88,
+        "Security": 76,
+        "Data": 130,
+        "Compliance": 19,
+        "API": 75,
+        "Operational": 77
+      }
+    },
+    {
+      "name": "MAY clauses excluded from formal REQ total",
+      "passed": false,
+      "details": {
+        "count": 24,
+        "ids": [
+          "REQ-001.05",
+          "REQ-013.03",
+          "REQ-013.04",
+          "REQ-013.05",
+          "REQ-013.06",
+          "REQ-013.07",
+          "REQ-019.03",
+          "REQ-024.02",
+          "REQ-026.02",
+          "REQ-039.02",
+          "REQ-045.02",
+          "REQ-049.02",
+          "REQ-060.09",
+          "REQ-060.10",
+          "REQ-060.11",
+          "REQ-060.12",
+          "REQ-060.13",
+          "REQ-060.14",
+          "REQ-068.05",
+          "REQ-070.24",
+          "REQ-071.16",
+          "REQ-078.12",
+          "REQ-081.08",
+          "REQ-082.04"
+        ]
+      }
+    },
+    {
+      "name": "Acceptance criteria are requirement-specific and binary",
+      "passed": false,
+      "details": {
+        "generic_count": 1392,
+        "sample": [
+          "REQ-001.01",
+          "REQ-001.02",
+          "REQ-001.03",
+          "REQ-001.04",
+          "REQ-001.05",
+          "REQ-001.06",
+          "REQ-001.07",
+          "REQ-001.08",
+          "REQ-001.09",
+          "REQ-001.10",
+          "REQ-001.11",
+          "REQ-002.01",
+          "REQ-002.02",
+          "REQ-002.03",
+          "REQ-002.04",
+          "REQ-002.05",
+          "REQ-002.06",
+          "REQ-002.07",
+          "REQ-002.08",
+          "REQ-002.09",
+          "REQ-002.10",
+          "REQ-002.11",
+          "REQ-002.12",
+          "REQ-002.13",
+          "REQ-002.14",
+          "REQ-002.15",
+          "REQ-002.16",
+          "REQ-002.17",
+          "REQ-002.18",
+          "REQ-002.19",
+          "REQ-002.20",
+          "REQ-002.21",
+          "REQ-002.22",
+          "REQ-002.23",
+          "REQ-002.24",
+          "REQ-002.25",
+          "REQ-002.26",
+          "REQ-002.27",
+          "REQ-002.28",
+          "REQ-002.29",
+          "REQ-002.30",
+          "REQ-002.31",
+          "REQ-002.32",
+          "REQ-002.33",
+          "REQ-002.34",
+          "REQ-002.35",
+          "REQ-002.36",
+          "REQ-002.37",
+          "REQ-002.38",
+          "REQ-002.39"
+        ]
+      }
+    },
+    {
+      "name": "Mixed-modality citations manually resolved",
+      "passed": false,
+      "details": {
+        "count": 12,
+        "rows": [
+          {
+            "id": "REQ-001.05",
+            "tokens": [
+              "MAY",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-002.08",
+            "tokens": [
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-002.09",
+            "tokens": [
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-004.11",
+            "tokens": [
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-007.05",
+            "tokens": [
+              "MAY",
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-007.06",
+            "tokens": [
+              "MAY",
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-007.07",
+            "tokens": [
+              "MAY",
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-007.08",
+            "tokens": [
+              "MAY",
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-007.09",
+            "tokens": [
+              "MAY",
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-007.10",
+            "tokens": [
+              "MAY",
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-007.11",
+            "tokens": [
+              "MAY",
+              "MUST",
+              "SHOULD"
+            ]
+          },
+          {
+            "id": "REQ-007.12",
+            "tokens": [
+              "MAY",
+              "MUST",
+              "SHOULD"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Related Phase 0 document IDs resolved",
+      "passed": false,
+      "details": {
+        "count": 1392,
+        "sample": [
+          "REQ-001.01",
+          "REQ-001.02",
+          "REQ-001.03",
+          "REQ-001.04",
+          "REQ-001.05",
+          "REQ-001.06",
+          "REQ-001.07",
+          "REQ-001.08",
+          "REQ-001.09",
+          "REQ-001.10",
+          "REQ-001.11",
+          "REQ-002.01",
+          "REQ-002.02",
+          "REQ-002.03",
+          "REQ-002.04",
+          "REQ-002.05",
+          "REQ-002.06",
+          "REQ-002.07",
+          "REQ-002.08",
+          "REQ-002.09",
+          "REQ-002.10",
+          "REQ-002.11",
+          "REQ-002.12",
+          "REQ-002.13",
+          "REQ-002.14",
+          "REQ-002.15",
+          "REQ-002.16",
+          "REQ-002.17",
+          "REQ-002.18",
+          "REQ-002.19",
+          "REQ-002.20",
+          "REQ-002.21",
+          "REQ-002.22",
+          "REQ-002.23",
+          "REQ-002.24",
+          "REQ-002.25",
+          "REQ-002.26",
+          "REQ-002.27",
+          "REQ-002.28",
+          "REQ-002.29",
+          "REQ-002.30",
+          "REQ-002.31",
+          "REQ-002.32",
+          "REQ-002.33",
+          "REQ-002.34",
+          "REQ-002.35",
+          "REQ-002.36",
+          "REQ-002.37",
+          "REQ-002.38",
+          "REQ-002.39"
+        ]
+      }
+    },
+    {
+      "name": "Atomicity candidates manually resolved",
+      "passed": false,
+      "details": {
+        "count": 75,
+        "sample": [
+          {
+            "id": "REQ-001.01",
+            "source_segments": 28,
+            "summary": "The delivery agent operates as a multidisciplinary product, engineering, security, operations, design, marketing, QA, and documentation organization rather than immediately acting as a coding assistant."
+          },
+          {
+            "id": "REQ-003.03",
+            "source_segments": 10,
+            "summary": "Brand execution preserves the listed modern, clean, premium, friendly, professional, transparent, trustworthy, simple, and fast personality."
+          },
+          {
+            "id": "REQ-012.02",
+            "source_segments": 12,
+            "summary": "The earning lifecycle can represent Survey Completed, Pending, Validated, Mature, Withdrawable, and Paid in the stated order."
+          },
+          {
+            "id": "REQ-019.02",
+            "source_segments": 6,
+            "summary": "The blog supports SEO, organic traffic, trust building, education, and content marketing purposes."
+          },
+          {
+            "id": "REQ-024.02",
+            "source_segments": 6,
+            "summary": "The state model can represent active, limited, suspended, disabled, and archived states as candidate states without treating the example list as closed."
+          },
+          {
+            "id": "REQ-026.02",
+            "source_segments": 9,
+            "summary": "The administrator-role model can represent the example operational, finance, support, content, marketing, developer, and auditor role families without treating that list as closed."
+          },
+          {
+            "id": "REQ-032.02",
+            "source_segments": 8,
+            "summary": "The audit scope covers user modifications, permission changes, withdrawal approvals, settings changes, content updates, login attempts, and failed authentication events."
+          },
+          {
+            "id": "REQ-035.02",
+            "source_segments": 8,
+            "summary": "Backend options are evaluated for free-tier friendliness, scalability, security, maintainability, performance, developer productivity, and long-term sustainability."
+          },
+          {
+            "id": "REQ-038.01",
+            "source_segments": 12,
+            "summary": "Project decisions prioritize user trust, simplicity, transparency, security, performance, scalability, maintainability, accessibility, automation, and long-term sustainability."
+          },
+          {
+            "id": "REQ-039.02",
+            "source_segments": 18,
+            "summary": "The architecture evaluates the suggested authentication, user, wallet, rewards, surveys, withdrawals, notifications, CMS, blog, support, leaderboards, admin, analytics, settings, audit, jobs, and integration module boundaries."
+          },
+          {
+            "id": "REQ-044.08",
+            "source_segments": 7,
+            "summary": "The background-processing design covers email, notifications, scheduled synchronization, cleanup, reporting, and maintenance workloads."
+          },
+          {
+            "id": "REQ-045.02",
+            "source_segments": 6,
+            "summary": "Release planning evaluates internal alpha, closed beta, open beta, public launch, and incremental releases."
+          },
+          {
+            "id": "REQ-045.08",
+            "source_segments": 6,
+            "summary": "The backup and recovery strategy evaluates database, configuration, and file-storage backups, recovery testing, and recovery objectives."
+          },
+          {
+            "id": "REQ-045.10",
+            "source_segments": 8,
+            "summary": "The product regularly reviews user feedback, support requests, analytics, performance metrics, and security findings."
+          },
+          {
+            "id": "REQ-049.02",
+            "source_segments": 9,
+            "summary": "The identity and authentication domain evaluates users, credentials, sessions, email verification, password reset, login history, and devices as distinct concerns."
+          },
+          {
+            "id": "REQ-054.14",
+            "source_segments": 5,
+            "summary": "The audit domain covers settings changes, user moderation, permission changes, and administrative actions."
+          },
+          {
+            "id": "REQ-055.02",
+            "source_segments": 6,
+            "summary": "Retention recommendations cover logs, audit records, notifications, sessions, and support tickets."
+          },
+          {
+            "id": "REQ-056.02",
+            "source_segments": 7,
+            "summary": "The index review covers user lookups, wallet history, withdrawals, surveys, notifications, and audit logs."
+          },
+          {
+            "id": "REQ-056.05",
+            "source_segments": 5,
+            "summary": "The scalability review considers future partitioning, historical archiving, read-heavy workloads, and reporting requirements."
+          },
+          {
+            "id": "REQ-064.02",
+            "source_segments": 6,
+            "summary": "The asynchronous-processing design covers email, notifications, synchronization, maintenance, and reporting workloads."
+          },
+          {
+            "id": "REQ-067.01",
+            "source_segments": 9,
+            "summary": "The interface communicates professionalism, trust, simplicity, transparency, speed, security, and modernity."
+          },
+          {
+            "id": "REQ-067.04",
+            "source_segments": 9,
+            "summary": "The design language is clean, spacious, elegant, minimal, premium, responsive, fast, and mobile-first."
+          },
+          {
+            "id": "REQ-067.05",
+            "source_segments": 7,
+            "summary": "The interface avoids clutter, excessive popups, distracting animations, heavy gradients, flashy colors, and confusing layouts."
+          },
+          {
+            "id": "REQ-067.06",
+            "source_segments": 10,
+            "summary": "Pages use consistent spacing, typography, buttons, icons, forms, colors, cards, and navigation."
+          },
+          {
+            "id": "REQ-068.02",
+            "source_segments": 6,
+            "summary": "The logo communicates reward, value, growth, premium quality, and trust."
+          },
+          {
+            "id": "REQ-068.05",
+            "source_segments": 15,
+            "summary": "The palette evaluates the suggested deep-blue, emerald-green, success, warning, danger, and neutral directions without treating them as pre-approved selections."
+          },
+          {
+            "id": "REQ-068.07",
+            "source_segments": 7,
+            "summary": "Typography uses modern readable fonts and prioritizes readability, accessibility, professionalism, and mobile readability."
+          },
+          {
+            "id": "REQ-068.10",
+            "source_segments": 6,
+            "summary": "Responsive breakpoints are planned for mobile, tablet, laptop, desktop, and large desktop."
+          },
+          {
+            "id": "REQ-068.11",
+            "source_segments": 6,
+            "summary": "Icons are simple, modern, consistent, and recognizable."
+          },
+          {
+            "id": "REQ-069.01",
+            "source_segments": 9,
+            "summary": "The design system standardizes primary, secondary, outline, danger, text, disabled, and loading button variants."
+          },
+          {
+            "id": "REQ-069.02",
+            "source_segments": 7,
+            "summary": "Every button defines hover, focus, active, disabled, and loading states."
+          },
+          {
+            "id": "REQ-069.10",
+            "source_segments": 7,
+            "summary": "Cards use consistent padding, borders, corner radius, shadow, and hover behavior."
+          },
+          {
+            "id": "REQ-069.11",
+            "source_segments": 8,
+            "summary": "The shared card system supports survey, wallet, transaction, blog, statistic, leaderboard, and admin-widget contexts."
+          },
+          {
+            "id": "REQ-070.01",
+            "source_segments": 11,
+            "summary": "The dashboard prioritizes wallet summary, available surveys, pending rewards, mature rewards, weekly leaderboard, recent activity, notifications, and announcements in the suggested order unless an approved design justifies a change."
+          },
+          {
+            "id": "REQ-070.23",
+            "source_segments": 6,
+            "summary": "The weekly leaderboard displays rank, display name, points earned, and surveys completed."
+          },
+          {
+            "id": "REQ-072.13",
+            "source_segments": 10,
+            "summary": "Professional 401, 403, 404, 429, 500, maintenance, and offline pages are created."
+          },
+          {
+            "id": "REQ-074.02",
+            "source_segments": 9,
+            "summary": "Long-term growth planning centers on trust, content, community, organic search, social presence, retention, referrals, and brand authority."
+          },
+          {
+            "id": "REQ-074.04",
+            "source_segments": 7,
+            "summary": "Brand messaging emphasizes respect for user time, transparency, fair rewards, simplicity, reliable withdrawals, and user empowerment."
+          },
+          {
+            "id": "REQ-074.07",
+            "source_segments": 15,
+            "summary": "The target-audience plan covers the stated US, UK, Canadian, Australian, Irish, German, selected-European, and GCC markets."
+          },
+          {
+            "id": "REQ-074.08",
+            "source_segments": 6,
+            "summary": "Campaign planning adapts to country, culture, language behavior, internet habits, and reward preferences."
+          },
+          {
+            "id": "REQ-075.19",
+            "source_segments": 29,
+            "summary": "The content calendar covers survey education, rewards education, trust content, and search-based content."
+          },
+          {
+            "id": "REQ-076.02",
+            "source_segments": 9,
+            "summary": "The YouTube strategy covers branding, video categories, upload schedule, SEO, thumbnails, and retention."
+          },
+          {
+            "id": "REQ-076.03",
+            "source_segments": 16,
+            "summary": "YouTube content planning covers educational videos, platform updates, and trust-building content."
+          },
+          {
+            "id": "REQ-076.04",
+            "source_segments": 6,
+            "summary": "Short-form strategy covers TikTok, Instagram Reels, YouTube Shorts, and Facebook Reels."
+          },
+          {
+            "id": "REQ-076.05",
+            "source_segments": 5,
+            "summary": "Short-form content focuses on quick tips, reward education, platform features, and user guidance."
+          },
+          {
+            "id": "REQ-076.07",
+            "source_segments": 13,
+            "summary": "Initial social priorities are YouTube, Instagram, TikTok, and Facebook; LinkedIn remains a future consideration and is not a launch priority."
+          },
+          {
+            "id": "REQ-077.17",
+            "source_segments": 13,
+            "summary": "The blog SEO plan defines content clusters, pillar pages, supporting articles, and internal linking."
+          },
+          {
+            "id": "REQ-078.12",
+            "source_segments": 6,
+            "summary": "Future referral architecture considers links, tracking, reward rules, campaign management, and fraud prevention."
+          },
+          {
+            "id": "REQ-078.14",
+            "source_segments": 9,
+            "summary": "A retention design considers leaderboards, future achievements, reward milestones, recommendations, notifications, and education."
+          },
+          {
+            "id": "REQ-079.22",
+            "source_segments": 5,
+            "summary": "Customer-acquisition cost, lifetime value, and payback period are calculated before paid scaling is recommended."
+          }
+        ]
+      }
+    },
+    {
+      "name": "All normative source lines cited",
+      "passed": false,
+      "details": [
+        {
+          "line": 107,
+          "text": "Version 1.0 must remain intentionally focused."
+        },
+        {
+          "line": 569,
+          "text": "The dashboard should be the heart of the platform."
+        },
+        {
+          "line": 1629,
+          "text": "I think we should instead create something much more valuable:"
+        },
+        {
+          "line": 2025,
+          "text": "Rather than telling the AI what database tables to create, we should tell it how to think about database design. That gives it room to optimize while still meeting your business goals."
+        },
+        {
+          "line": 4127,
+          "text": "Channels may include:"
+        },
+        {
+          "line": 5147,
+          "text": "Required documents:"
+        }
+      ]
+    },
+    {
+      "name": "ODR register integrity",
+      "passed": true,
+      "details": {
+        "count": 27,
+        "unique_ids": true,
+        "record_types_valid": true,
+        "derived_labels_valid": true
+      }
+    },
+    {
+      "name": "DDR register integrity",
+      "passed": true,
+      "details": {
+        "count": 14,
+        "unique_ids": true,
+        "record_types_valid": true,
+        "derived_labels_valid": true
+      }
+    },
+    {
+      "name": "EFE register integrity",
+      "passed": true,
+      "details": {
+        "count": 12,
+        "unique_ids": true,
+        "record_types_valid": true,
+        "derived_labels_valid": true
+      }
+    },
+    {
+      "name": "OCR register integrity",
+      "passed": true,
+      "details": {
+        "count": 3,
+        "unique_ids": true,
+        "record_types_valid": true,
+        "derived_labels_valid": true
+      }
+    }
+  ],
+  "summary": {
+    "passed_checks": 13,
+    "failed_checks": 8,
+    "verdict": "FAIL — REVISION REQUIRED"
+  }
+}

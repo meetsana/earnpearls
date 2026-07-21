@@ -1,6 +1,19 @@
-# 💎 EarnPearls UI — Component Library
+# 💎 EarnPearls UI — Pre-Implementation Prototype
 
-> **"Your Time. Your Rewards."** — A complete, production-ready UI component set for the EarnPearls rewards platform.
+> **"Your Time. Your Rewards."** — An exploratory UI component showcase for the EarnPearls rewards platform.
+
+> [!WARNING]
+> This repository is in **Phase 0 planning and audit**. The UI is not an approved
+> product baseline, is not production-ready, and must not be treated as evidence
+> that Phase 1 implementation has begun or passed review. The Constitution and
+> approved Phase 0 documents govern future implementation.
+
+Governance and audit entry points:
+
+- [Phase 0 status](docs/phase-0/README.md)
+- [EP-P0-01 v3 baseline status](docs/phase-0/EP-P0-01/candidate-v3/STATUS.md)
+- [Independent semantic review](docs/phase-0/EP-P0-01/audit/EP-P0-01-V3-SEMANTIC-REVIEW-2026-07-21.md)
+- [Repository audit](docs/audits/PROJECT-AUDIT-2026-07-21.md)
 
 ---
 
@@ -17,7 +30,10 @@
 
 ## Overview
 
-EarnPearls is a GPT-class survey rewards platform where users earn points for completing surveys and redeem them for real cash via PayPal, Virtual Visa, or Cryptocurrency.
+EarnPearls is a planned global rewards platform whose focused V1 centers on surveys,
+wallet transparency, rewards, trust, and scalability. Withdrawal architecture is
+intended to remain configurable; no payment method shown in this prototype should be
+interpreted as an approved or enabled launch method.
 
 - **Currency**: 1,000 points = $1 USD (configurable)
 - **Balance Lifecycle**: Pending → Validated → Mature → Withdrawable → Paid

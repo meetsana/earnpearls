@@ -25,4 +25,31 @@ describe("core screen accessibility", () => {
     ).toBeVisible();
     expect((await axe(container)).violations).toEqual([]);
   });
+
+  it("labels configured demo payout methods without enabling them", async () => {
+    const { container, getByText, queryByLabelText } = render(
+      <WithdrawalMethodsPanel
+        methods={[
+          {
+            code: "demo_paypal",
+            displayName: "PayPal (demo only)",
+            enabled: false,
+            minimum: {
+              points: "5000",
+              usdMicros: "5000000",
+              usd: "5.000000",
+            },
+            fee: { points: "0", usdMicros: "0", usd: "0.000000" },
+            supportedForUser: true,
+          },
+        ]}
+      />,
+    );
+    expect(
+      getByText("Withdrawals are disabled in this environment."),
+    ).toBeVisible();
+    expect(getByText("disabled")).toBeVisible();
+    expect(queryByLabelText(/destination/i)).not.toBeInTheDocument();
+    expect((await axe(container)).violations).toEqual([]);
+  });
 });

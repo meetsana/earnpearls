@@ -118,6 +118,44 @@ async function seedDemoData(database: Database): Promise<void> {
       ],
     );
   }
+
+  for (const method of [
+    {
+      code: "demo_paypal",
+      displayName: "PayPal (demo only)",
+      minimumPoints: "5000",
+      feePoints: "0",
+      destinationSchema: { type: "email" },
+    },
+    {
+      code: "demo_virtual_visa",
+      displayName: "Virtual Visa (demo only)",
+      minimumPoints: "10000",
+      feePoints: "500",
+      destinationSchema: { type: "email" },
+    },
+  ] as const) {
+    await database.query(
+      `INSERT INTO withdrawal_methods (
+        code, display_name, enabled, minimum_points, fee_points,
+        country_codes, destination_schema, configuration
+      ) VALUES ($1, $2, FALSE, $3, $4, '{}', $5, '{"demo":true}')
+      ON CONFLICT (code) DO UPDATE SET
+        display_name = EXCLUDED.display_name,
+        enabled = FALSE,
+        minimum_points = EXCLUDED.minimum_points,
+        fee_points = EXCLUDED.fee_points,
+        destination_schema = EXCLUDED.destination_schema,
+        configuration = EXCLUDED.configuration`,
+      [
+        method.code,
+        method.displayName,
+        method.minimumPoints,
+        method.feePoints,
+        JSON.stringify(method.destinationSchema),
+      ],
+    );
+  }
 }
 
 await seed();

@@ -1,0 +1,102 @@
+# yaml-language-server: $schema=https://render.com/schema/render.yaml.json
+
+services:
+  - type: web
+    runtime: docker
+    name: earnpearls-staging-api-meetsana
+    repo: https://github.com/meetsana/earnpearls
+    branch: staging
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./infra/docker/api.Dockerfile
+    dockerContext: .
+    dockerCommand: node /app/infra/scripts/staging-supervisor.mjs
+    autoDeployTrigger: checksPass
+    healthCheckPath: /health/ready
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
+      - key: DATABASE_POOL_MAX
+        value: "5"
+      - key: APP_ORIGINS
+        value: https://earnpearls-staging-web-meetsana.onrender.com
+      - key: PUBLIC_APP_URL
+        value: https://earnpearls-staging-web-meetsana.onrender.com
+      - key: TRUST_PROXY
+        value: "true"
+      - key: SESSION_COOKIE_NAME
+        value: ep_session
+      - key: SESSION_TTL_HOURS
+        value: "24"
+      - key: AUTH_TOKEN_TTL_MINUTES
+        value: "30"
+      - key: PASSWORD_PEPPER
+        generateValue: true
+      - key: IP_HASH_SECRET
+        generateValue: true
+      - key: DATA_ENCRYPTION_KEY
+        generateValue: true
+      - key: PROVIDER_WEBHOOK_SECRET
+        generateValue: true
+      - key: ENABLE_SWAGGER
+        value: "false"
+      - key: ALLOW_DEMO_DATA
+        value: "true"
+      - key: SMTP_URL
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_WORKER_POLL_MS
+        value: "5000"
+      - key: SEED_ADMIN_EMAIL
+        sync: false
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_ADMIN_COUNTRY
+        value: US
+
+  - type: web
+    runtime: static
+    name: earnpearls-staging-web-meetsana
+    repo: https://github.com/meetsana/earnpearls
+    branch: staging
+    buildCommand: npm ci --no-audit --no-fund && npm run build:web
+    staticPublishPath: ./dist
+    autoDeployTrigger: checksPass
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /v1/*
+        destination: https://earnpearls-staging-api-meetsana.onrender.com/v1/*
+      - type: rewrite
+        source: /health/*
+        destination: https://earnpearls-staging-api-meetsana.onrender.com/health/*
+      - type: rewrite
+        source: /*
+        destination: /index.html

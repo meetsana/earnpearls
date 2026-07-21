@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "db:migrate": "node --env-file-if-exists=.env --import tsx src/db/migrate.ts",
     "db:seed": "node --env-file-if-exists=.env --import tsx src/db/seed.ts",
+    "db:verify-staging": "node --env-file-if-exists=.env --import tsx src/db/verify-staging.ts",
     "openapi:generate": "node --env-file-if-exists=.env --import tsx src/scripts/generate-openapi.ts"
   },
   "dependencies": {

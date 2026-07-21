@@ -2,6 +2,9 @@
 
 ## Purpose and release boundary
 
+The approved temporary free-tier implementation and its documented deviations are in
+`STAGING-FREE-TIER.md`. This runbook remains the production-like target topology.
+
 This runbook prepares a production-like staging environment without activating real
 survey providers, payouts, or live-money withdrawals. Staging must exercise the same
 security checks, container images, migrations, cookies, and browser/API boundary that
@@ -70,7 +73,7 @@ Run staging with production code paths:
 | `DATA_ENCRYPTION_KEY` | Unique 32-byte random key encoded as base64 |
 | `PROVIDER_WEBHOOK_SECRET` | Unique staging-only placeholder secret; no live provider |
 | `ENABLE_SWAGGER` | `false`; enable only behind restricted access |
-| `ALLOW_DEMO_DATA` | `false` |
+| `ALLOW_DEMO_DATA` | `false`; only the documented temporary free-tier demo may use `true` with a synthetic database |
 | `SMTP_URL` | Secret-managed staging SMTP URL |
 | `EMAIL_FROM` | Verified staging sender identity |
 | `EMAIL_WORKER_POLL_MS` | `5000` initially |
@@ -134,8 +137,9 @@ Require all of the following before continuing:
    routing to the API.
 8. Start one email worker only after SMTP connectivity and sender verification pass.
 9. Run the administrator seed job once with staging-only credentials and
-   `ALLOW_DEMO_DATA=false`. Remove the seed password from the runtime environment after
-   the job succeeds.
+   `ALLOW_DEMO_DATA=false`. The temporary free-tier exception in
+   `STAGING-FREE-TIER.md` uses explicit synthetic data. Remove the seed password from
+   the runtime environment after the job succeeds.
 10. Keep every provider disabled, every payout method disabled, and the global
     withdrawal feature disabled.
 

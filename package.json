@@ -18,17 +18,18 @@
     "build:contracts": "npm run build --workspace @earnpearls/contracts",
     "build:api": "npm run build --workspace @earnpearls/api",
     "preview": "vite preview",
-    "format": "prettier --write \"apps/api/**/*.ts\" \"packages/contracts/**/*.ts\" \"src/**/*.{ts,tsx}\" \"scripts/*.mjs\" \"{package.json,apps/api/package.json,packages/contracts/package.json,tsconfig.web.json,vite.config.ts,vitest.config.ts}\" \".github/workflows/*.yml\" \"infra/docker-compose.yml\"",
-    "format:check": "prettier --check \"apps/api/**/*.ts\" \"packages/contracts/**/*.ts\" \"src/**/*.{ts,tsx}\" \"scripts/*.mjs\" \"{package.json,apps/api/package.json,packages/contracts/package.json,tsconfig.web.json,vite.config.ts,vitest.config.ts}\" \".github/workflows/*.yml\" \"infra/docker-compose.yml\"",
+    "format": "prettier --write \"apps/api/**/*.ts\" \"packages/contracts/**/*.ts\" \"src/**/*.{ts,tsx}\" \"scripts/*.mjs\" \"infra/scripts/*.mjs\" \"{package.json,apps/api/package.json,packages/contracts/package.json,tsconfig.web.json,vite.config.ts,vitest.config.ts,render.yaml}\" \".github/workflows/*.yml\" \"infra/docker-compose.yml\"",
+    "format:check": "prettier --check \"apps/api/**/*.ts\" \"packages/contracts/**/*.ts\" \"src/**/*.{ts,tsx}\" \"scripts/*.mjs\" \"infra/scripts/*.mjs\" \"{package.json,apps/api/package.json,packages/contracts/package.json,tsconfig.web.json,vite.config.ts,vitest.config.ts,render.yaml}\" \".github/workflows/*.yml\" \"infra/docker-compose.yml\"",
     "typecheck": "npm run typecheck --workspace @earnpearls/contracts && npm run build --workspace @earnpearls/contracts && npm run typecheck:web && npm run typecheck --workspace @earnpearls/api",
     "typecheck:web": "tsc -p tsconfig.web.json --noEmit",
     "test": "npm run test:web && npm run test --workspace @earnpearls/api",
     "test:web": "vitest run --config vitest.config.ts",
-    "check": "npm run format:check && npm run typecheck && npm run test && npm run build && npm run openapi:generate && npm run audit:mvp",
+    "check": "npm run format:check && npm run typecheck && npm run test && npm run build && npm run openapi:generate && npm run audit:mvp && npm run staging:validate",
     "audit:mvp": "node scripts/audit-mvp.mjs",
     "db:migrate": "npm run db:migrate --workspace @earnpearls/api",
     "db:seed": "npm run db:seed --workspace @earnpearls/api",
-    "openapi:generate": "npm run openapi:generate --workspace @earnpearls/api"
+    "openapi:generate": "npm run openapi:generate --workspace @earnpearls/api",
+    "staging:validate": "node scripts/validate-staging-config.mjs"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -47,7 +48,8 @@
     "prettier": "3.9.6",
     "typescript": "7.0.2",
     "vite": "^8.1.5",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.0",
+    "yaml": "2.9.0"
   },
   "packageManager": "npm@11.9.0"
 }

@@ -65,7 +65,7 @@ for (const table of [
   check(
     `${table} is append-only`,
     migration.includes(
-      `CREATE TRIGGER ${table.replace("wallet_transaction_events", "wallet_events").replace("account_state_events", "account_state_events")}`,
+      `CREATE TRIGGER ${table.replace("wallet_transaction_events", "wallet_events")}`,
     ) || migration.includes(`BEFORE UPDATE OR DELETE ON ${table}`),
     `BEFORE UPDATE OR DELETE ON ${table}`,
   );

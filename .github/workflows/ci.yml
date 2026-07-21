@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, staging]
 
 permissions:
   contents: read
@@ -53,8 +53,24 @@ jobs:
       - run: npm run db:migrate
       - run: npm test
       - run: npm run build
+      - run: npm run audit:mvp
+      - run: npm run staging:validate
+      - name: Verify staging seed remains synthetic and payout-disabled
+        if: github.ref == 'refs/heads/staging'
+        env:
+          ALLOW_DEMO_DATA: "true"
+          SEED_ADMIN_EMAIL: staging-admin@example.com
+          SEED_ADMIN_PASSWORD: staging-CI-password-only-2026
+          SEED_ADMIN_COUNTRY: US
+        run: >-
+          npm run db:seed &&
+          npm run db:verify-staging --workspace @earnpearls/api
+      - name: Build staging API image
+        run: docker build -f infra/docker/api.Dockerfile -t earnpearls-api:${{ github.sha }} .
       - run: npm run openapi:generate
       - name: Verify generated API contract is committed
         run: git diff --exit-code -- docs/api/openapi.json
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high
+      - name: Full dependency audit
+        run: npm audit --audit-level=low

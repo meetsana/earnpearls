@@ -422,10 +422,9 @@ export function WithdrawalMethodsPanel({
 }: {
   methods: WithdrawalMethod[];
 }) {
-  const available = methods.filter(
-    (method) => method.enabled && method.supportedForUser,
-  );
-  if (available.length === 0) {
+  const supported = methods.filter((method) => method.supportedForUser);
+  const available = supported.filter((method) => method.enabled);
+  if (supported.length === 0) {
     return (
       <EmptyState title="Withdrawals are not available yet">
         <p>
@@ -435,19 +434,31 @@ export function WithdrawalMethodsPanel({
     );
   }
   return (
-    <div className="method-grid">
-      {available.map((method) => (
-        <article className="card" key={method.code}>
-          <h3>{method.displayName}</h3>
+    <>
+      {available.length === 0 ? (
+        <div className="alert alert--warning" role="status">
+          <strong>Withdrawals are disabled in this environment.</strong>
           <p>
-            Minimum: <MoneyValue value={method.minimum} compact />
+            These method cards are demonstration data only. No destination can
+            be submitted and no payout can be created.
           </p>
-          <p>
-            Fee: <MoneyValue value={method.fee} compact />
-          </p>
-        </article>
-      ))}
-    </div>
+        </div>
+      ) : null}
+      <div className="method-grid">
+        {supported.map((method) => (
+          <article className="card" key={method.code}>
+            <h3>{method.displayName}</h3>
+            <StatusBadge status={method.enabled ? "available" : "disabled"} />
+            <p>
+              Minimum: <MoneyValue value={method.minimum} compact />
+            </p>
+            <p>
+              Fee: <MoneyValue value={method.fee} compact />
+            </p>
+          </article>
+        ))}
+      </div>
+    </>
   );
 }
 

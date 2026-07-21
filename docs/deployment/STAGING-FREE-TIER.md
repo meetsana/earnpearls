@@ -34,8 +34,9 @@ only when a reviewed queue/cache consumer exists.
 2. Select PostgreSQL `17` and AWS Frankfurt (`aws-eu-central-1`).
 3. Use the direct, unpooled connection string. It must include TLS requirements such as
    `sslmode=require`; never commit or paste it into logs.
-4. Keep the default Free-plan restore window and create one manual snapshot after the
-   migration and seed complete.
+4. Keep the default Free-plan six-hour restore window. Do not create a manual snapshot
+   unless the owner separately accepts Neon's snapshot-storage charge; for this
+   temporary environment, record the restore-window state after migration and seed.
 
 ### 2. Resend SMTP
 
@@ -105,7 +106,8 @@ topology in `STAGING-RUNBOOK.md`.
 8. Confirm no real provider, payout, or production secret appears in configuration or
    logs.
 9. Record the staging Git SHA, Render deploy IDs, frontend artifact, Docker image
-   digest, migration timestamp, Neon snapshot, and sanitized acceptance evidence.
+   digest, migration timestamp, Neon restore-window state, and sanitized acceptance
+   evidence.
 
 ## Known free-tier limitations
 
@@ -114,7 +116,7 @@ topology in `STAGING-RUNBOOK.md`.
 - Render grants 750 free web-service instance hours per workspace per month.
 - The free web service cannot run a separate free background worker or one-off job.
 - Neon Free is for prototyping, has limited storage/compute, and a six-hour restore
-  history window.
+  history window. Manual snapshot storage is outside this zero-cost staging decision.
 - Resend Free is limited to 100 transactional emails per day and 3,000 per month.
 - This environment has no production SLA and must contain synthetic data only.
 

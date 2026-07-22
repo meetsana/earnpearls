@@ -9,7 +9,9 @@ function runProcess(label, script, environment) {
     stdio: "inherit",
   });
   child.on("error", (error) => {
-    process.stderr.write(`[staging] ${label} failed to start: ${error.message}\n`);
+    process.stderr.write(
+      `[staging] ${label} failed to start: ${error.message}\n`,
+    );
   });
   return child;
 }
@@ -32,7 +34,9 @@ async function runOnce(label, script, environment) {
   const child = runProcess(label, script, environment);
   const result = await waitForExit(label, child);
   if (result.code !== 0) {
-    throw new Error(`${label} failed (${result.signal ?? `exit ${String(result.code)}`})`);
+    throw new Error(
+      `${label} failed (${result.signal ?? `exit ${String(result.code)}`})`,
+    );
   }
 }
 
@@ -58,14 +62,20 @@ async function main() {
 
   // Wait for termination signal
   const signal = new Promise((resolve) => {
-    process.once("SIGTERM", () => resolve({ label: "supervisor", signal: "SIGTERM" }));
-    process.once("SIGINT", () => resolve({ label: "supervisor", signal: "SIGINT" }));
+    process.once("SIGTERM", () =>
+      resolve({ label: "supervisor", signal: "SIGTERM" }),
+    );
+    process.once("SIGINT", () =>
+      resolve({ label: "supervisor", signal: "SIGINT" }),
+    );
   });
 
   const exit = await Promise.race([waitForExit("API", api), signal]);
 
   if (exit.label !== "supervisor") {
-    process.stderr.write(`[staging] API exited (${exit.signal ?? `exit ${String(exit.code)}`})\n`);
+    process.stderr.write(
+      `[staging] API exited (${exit.signal ?? `exit ${String(exit.code)}`})\n`,
+    );
     process.exitCode = 1;
   } else {
     process.exitCode = 0;

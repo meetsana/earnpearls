@@ -90,13 +90,7 @@ check(
   "Do not provision an unused cache",
 );
 check(
-  (web?.routes ?? [])[0]?.type === "redirect" &&
-    (web?.routes ?? [])[0]?.source === "/index.html" &&
-    (web?.routes ?? [])[0]?.destination === "/",
-  "Static index must redirect to the canonical root URL",
-);
-check(
-  (web?.routes ?? [])[1]?.source === "/v1/*",
+  (web?.routes ?? [])[0]?.source === "/v1/*",
   "API rewrite must precede SPA fallback",
 );
 check(

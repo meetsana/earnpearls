@@ -13,7 +13,6 @@ services:
     dockerCommand: node /app/infra/scripts/staging-supervisor.mjs
     autoDeployTrigger: checksPass
     healthCheckPath: /health/ready
-    maxShutdownDelaySeconds: 30
     envVars:
       - key: NODE_ENV
         value: production

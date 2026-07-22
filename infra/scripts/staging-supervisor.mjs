@@ -30,6 +30,38 @@ function waitForExit(label, child) {
   });
 }
 
+function superviseWorker(label, script, environment) {
+  let child = null;
+  let restartTimer = null;
+  let stopping = false;
+  let failureCount = 0;
+
+  const launch = () => {
+    if (stopping) return;
+    child = runProcess(label, script, environment);
+    child.once("exit", (code, signal) => {
+      if (stopping) return;
+      failureCount += 1;
+      const restartDelay = Math.min(30_000, 1_000 * 2 ** failureCount);
+      process.stderr.write(
+        `[staging] ${label} exited (${signal ?? `exit ${String(code)}`}); restarting in ${restartDelay}ms\n`,
+      );
+      restartTimer = setTimeout(launch, restartDelay);
+    });
+  };
+
+  launch();
+  return {
+    stop() {
+      stopping = true;
+      if (restartTimer) clearTimeout(restartTimer);
+      if (child && child.exitCode === null && child.signalCode === null) {
+        child.kill("SIGTERM");
+      }
+    },
+  };
+}
+
 async function runOnce(label, script, environment) {
   const child = runProcess(label, script, environment);
   const result = await waitForExit(label, child);
@@ -57,8 +89,25 @@ async function main() {
   delete runtimeEnv.SEED_ADMIN_PASSWORD;
   delete runtimeEnv.SEED_ADMIN_COUNTRY;
 
-  // Start API only (no email worker)
+  // The API is the critical process. Workers are independently supervised so
+  // a transient SMTP or background-job failure cannot take HTTP traffic down.
   const api = runProcess("API", "dist/server.js", runtimeEnv);
+  const workers = [
+    superviseWorker(
+      "operations worker",
+      "dist/workers/operations.js",
+      runtimeEnv,
+    ),
+  ];
+  if (runtimeEnv.SMTP_URL) {
+    workers.push(
+      superviseWorker("email worker", "dist/workers/email.js", runtimeEnv),
+    );
+  } else {
+    process.stderr.write(
+      "[staging] SMTP_URL is not configured; email remains queued in the transactional outbox\n",
+    );
+  }
 
   // Wait for termination signal
   const signal = new Promise((resolve) => {
@@ -85,6 +134,7 @@ async function main() {
   if (api.exitCode === null && api.signalCode === null) {
     api.kill("SIGTERM");
   }
+  for (const worker of workers) worker.stop();
 }
 
 main().catch((error) => {

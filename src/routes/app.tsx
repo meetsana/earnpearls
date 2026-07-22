@@ -1,11 +1,12 @@
 import { useRef, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { api } from "../api/endpoints";
 import type {
   CursorPage,
   Dashboard as DashboardData,
   Survey,
+  SurveyParticipation,
   WalletSummary,
   WalletTransaction,
   Withdrawal,
@@ -71,6 +72,26 @@ function DashboardContent({ data }: { data: DashboardData }) {
         </section>
       ))}
       <WalletCards wallet={data.wallet} />
+      <div className="metric-grid">
+        <article className="metric-card">
+          <span>This week</span>
+          <MoneyValue value={data.weeklyEarnings} />
+        </article>
+        <article className="metric-card">
+          <span>This month</span>
+          <MoneyValue value={data.monthlyEarnings} />
+        </article>
+        <article className="metric-card">
+          <span>Leaderboard rank</span>
+          <strong className="large-number">
+            {data.leaderboardRank ? `#${data.leaderboardRank}` : "—"}
+          </strong>
+        </article>
+        <article className="metric-card">
+          <span>Profile complete</span>
+          <strong className="large-number">{data.profileCompletion}%</strong>
+        </article>
+      </div>
       <div className="content-grid content-grid--two">
         <section className="card">
           <h2>Surveys</h2>
@@ -87,6 +108,29 @@ function DashboardContent({ data }: { data: DashboardData }) {
           ) : (
             <p>No active withdrawal.</p>
           )}
+        </section>
+      </div>
+      <div className="content-grid content-grid--two">
+        <section className="card">
+          <div className="card-heading">
+            <h2>Notifications</h2>
+            <Link to="/app/notifications">View all</Link>
+          </div>
+          <p>{data.unreadNotificationCount} unread notification(s).</p>
+          {data.recentNotifications.map((notification) => (
+            <article className="dashboard-update" key={notification.id}>
+              <strong>{notification.title}</strong>
+              <p>{notification.body}</p>
+            </article>
+          ))}
+        </section>
+        <section className="card">
+          <h2>Support</h2>
+          <p className="large-number">{data.openSupportTicketCount}</p>
+          <p>Open support ticket(s).</p>
+          <Link className="button button--secondary" to="/app/support">
+            Open Support Center
+          </Link>
         </section>
       </div>
       <section className="card">
@@ -181,6 +225,10 @@ function SurveyCard({
           <dd>{survey.category ?? "General"}</dd>
         </div>
         <div>
+          <dt>Difficulty</dt>
+          <dd>{survey.difficulty ?? "Not provided"}</dd>
+        </div>
+        <div>
           <dt>Devices</dt>
           <dd>
             {survey.deviceCompatibility.length > 0
@@ -204,7 +252,25 @@ function SurveyCard({
 }
 
 export function Surveys() {
-  const { state, reload } = useApiResource(() => api.surveys.list());
+  const [filters, setFilters] = useState({
+    category: "",
+    difficulty: "",
+    device: "",
+    sort: "reward_desc" as "reward_desc" | "time_asc" | "newest",
+  });
+  const { state, reload } = useApiResource(async () => {
+    const options = {
+      ...(filters.category ? { category: filters.category } : {}),
+      ...(filters.difficulty ? { difficulty: filters.difficulty } : {}),
+      ...(filters.device ? { device: filters.device } : {}),
+      sort: filters.sort,
+    };
+    const [surveys, history] = await Promise.all([
+      api.surveys.list(options),
+      api.surveys.history(50),
+    ]);
+    return { surveys, history };
+  }, [filters.category, filters.difficulty, filters.device, filters.sort]);
   const action = useAsyncAction<unknown>();
   const [startingId, setStartingId] = useState<string | null>(null);
 
@@ -225,8 +291,65 @@ export function Surveys() {
     <section>
       <PageHeader
         title="Surveys"
-        description="Available surveys are filtered by the server."
+        description="Available surveys are filtered by eligibility on the server. Provider confirmation can take time."
       />
+      <div className="filter-bar survey-filters">
+        <label>
+          Category
+          <input
+            maxLength={80}
+            placeholder="All categories"
+            value={filters.category}
+            onChange={(event) =>
+              setFilters({ ...filters, category: event.target.value })
+            }
+          />
+        </label>
+        <label>
+          Difficulty
+          <select
+            value={filters.difficulty}
+            onChange={(event) =>
+              setFilters({ ...filters, difficulty: event.target.value })
+            }
+          >
+            <option value="">Any difficulty</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </label>
+        <label>
+          Device
+          <select
+            value={filters.device}
+            onChange={(event) =>
+              setFilters({ ...filters, device: event.target.value })
+            }
+          >
+            <option value="">Any device</option>
+            <option value="desktop">Desktop</option>
+            <option value="mobile">Mobile</option>
+            <option value="tablet">Tablet</option>
+          </select>
+        </label>
+        <label>
+          Sort
+          <select
+            value={filters.sort}
+            onChange={(event) =>
+              setFilters({
+                ...filters,
+                sort: event.target.value as typeof filters.sort,
+              })
+            }
+          >
+            <option value="reward_desc">Highest reward</option>
+            <option value="time_asc">Shortest time</option>
+            <option value="newest">Newest</option>
+          </select>
+        </label>
+      </div>
       {action.state.status === "error" ? (
         <ErrorNotice error={action.state.error} />
       ) : null}
@@ -236,14 +359,14 @@ export function Surveys() {
       {state.status === "error" ? (
         <ErrorNotice error={state.error} onRetry={reload} />
       ) : null}
-      {state.status === "success" && state.data.length === 0 ? (
+      {state.status === "success" && state.data.surveys.length === 0 ? (
         <EmptyState title="No surveys available">
           <p>Check back later. Availability can change without notice.</p>
         </EmptyState>
       ) : null}
-      {state.status === "success" && state.data.length > 0 ? (
+      {state.status === "success" && state.data.surveys.length > 0 ? (
         <div className="content-grid content-grid--three">
-          {state.data.map((survey) => (
+          {state.data.surveys.map((survey) => (
             <SurveyCard
               key={survey.id}
               survey={survey}
@@ -253,6 +376,55 @@ export function Surveys() {
           ))}
         </div>
       ) : null}
+      {state.status === "success" ? (
+        <SurveyHistory history={state.data.history} />
+      ) : null}
+    </section>
+  );
+}
+
+function SurveyHistory({ history }: { history: SurveyParticipation[] }) {
+  return (
+    <section className="card survey-history">
+      <h2>Survey history</h2>
+      {history.length === 0 ? (
+        <p>No survey activity yet.</p>
+      ) : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Survey</th>
+                <th scope="col">Started</th>
+                <th scope="col">Reward</th>
+                <th scope="col">Status</th>
+                <th scope="col">Maturity estimate</th>
+                <th scope="col">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((participation) => (
+                <tr key={participation.id}>
+                  <td>{participation.title}</td>
+                  <td>{formatDate(participation.startedAt)}</td>
+                  <td>
+                    <MoneyValue value={participation.reward} compact />
+                  </td>
+                  <td>
+                    <StatusBadge status={participation.status} />
+                  </td>
+                  <td>
+                    {participation.estimatedMaturityAt
+                      ? formatDate(participation.estimatedMaturityAt)
+                      : "Not provided"}
+                  </td>
+                  <td>{participation.rejectionReason ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }
@@ -349,11 +521,29 @@ function WalletContent({
         <div>
           <span>Total earnings</span>
           <MoneyValue value={summary.totalEarnings} />
+          {summary.conversion.localCurrencyEstimate ? (
+            <small>
+              Estimated {summary.conversion.localCurrencyEstimate.currency}{" "}
+              {summary.conversion.localCurrencyEstimate.totalEarnings}
+            </small>
+          ) : null}
         </div>
-        <p>
-          Conversion: {formatIntegerString(summary.conversion.pointsPerUsd)}{" "}
-          points = 1 {summary.conversion.sourceCurrency}
-        </p>
+        <div>
+          <p>
+            Conversion: {formatIntegerString(summary.conversion.pointsPerUsd)}{" "}
+            points = 1 {summary.conversion.sourceCurrency}
+          </p>
+          {summary.conversion.localCurrencyEstimate ? (
+            <small>
+              Display-only rate: 1 USD ={" "}
+              {summary.conversion.localCurrencyEstimate.ratePerUsd}{" "}
+              {summary.conversion.localCurrencyEstimate.currency}, as of{" "}
+              {formatDate(summary.conversion.localCurrencyEstimate.asOf)}
+            </small>
+          ) : (
+            <small>Local-currency estimates are not currently available.</small>
+          )}
+        </div>
       </section>
       <div className="metric-grid metric-grid--compact">
         {allBuckets.map(([label, value]) => (
@@ -469,17 +659,22 @@ function WithdrawalHistory({ withdrawals }: { withdrawals: Withdrawal[] }) {
       <table>
         <thead>
           <tr>
+            <th scope="col">Transaction ID</th>
             <th scope="col">Requested</th>
             <th scope="col">Method</th>
             <th scope="col">Amount</th>
             <th scope="col">Fee</th>
             <th scope="col">Destination</th>
             <th scope="col">Status</th>
+            <th scope="col">Expected / completed</th>
+            <th scope="col">Reference</th>
+            <th scope="col">Help</th>
           </tr>
         </thead>
         <tbody>
           {withdrawals.map((withdrawal) => (
             <tr key={withdrawal.id}>
+              <td className="break-word request-id">{withdrawal.id}</td>
               <td>
                 <time dateTime={withdrawal.requestedAt}>
                   {formatDate(withdrawal.requestedAt)}
@@ -498,6 +693,19 @@ function WithdrawalHistory({ withdrawals }: { withdrawals: Withdrawal[] }) {
                 {withdrawal.rejectionReason ? (
                   <p>{withdrawal.rejectionReason}</p>
                 ) : null}
+              </td>
+              <td>
+                {withdrawal.processedAt
+                  ? formatDate(withdrawal.processedAt)
+                  : withdrawal.estimatedCompletionAt
+                    ? `Estimated ${formatDate(withdrawal.estimatedCompletionAt)}`
+                    : "Not provided"}
+              </td>
+              <td className="break-word">
+                {withdrawal.payoutReference ?? "—"}
+              </td>
+              <td>
+                <Link to="/app/support">Contact support</Link>
               </td>
             </tr>
           ))}
@@ -528,6 +736,7 @@ function WithdrawalContent({
   const [formError, setFormError] = useState<string | null>(null);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const action = useAsyncAction<Withdrawal>();
+  const selectedMethod = available.find((method) => method.code === methodCode);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -617,9 +826,16 @@ function WithdrawalContent({
               />
             </label>
             <label>
-              Payout destination
+              {selectedMethod?.destinationType === "email"
+                ? "Payout email"
+                : selectedMethod?.destinationType === "crypto_address"
+                  ? "Wallet address"
+                  : "Payout account reference"}
               <input
                 required
+                type={
+                  selectedMethod?.destinationType === "email" ? "email" : "text"
+                }
                 minLength={3}
                 maxLength={500}
                 autoComplete="off"
@@ -712,7 +928,7 @@ export function Profile() {
     <section>
       <PageHeader
         title="Security"
-        description="Review and revoke active sessions. Profile editing is not exposed by the current API contract."
+        description="Review and revoke active sessions. Password and preference controls are available from Profile."
         actions={
           <button
             className="button button--danger"

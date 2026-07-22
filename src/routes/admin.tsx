@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 
 import { api } from "../api/endpoints";
 import type { AccountStatus, AdminUser, AdminWithdrawal } from "../api/types";
@@ -37,39 +38,109 @@ export function AdminDashboard() {
         <ErrorNotice error={state.error} onRetry={reload} />
       ) : null}
       {state.status === "success" ? (
-        <div className="metric-grid">
-          <article className="metric-card">
-            <span>Users</span>
-            <strong className="large-number">{state.data.users.total}</strong>
-            <small>
-              {state.data.users.verified} verified · {state.data.users.limited}{" "}
-              limited
-            </small>
-          </article>
-          <article className="metric-card">
-            <span>Available surveys</span>
-            <strong className="large-number">
-              {state.data.surveys.available}
-            </strong>
-            <small>
-              {state.data.surveys.pendingParticipations} pending participations
-            </small>
-          </article>
-          <article className="metric-card">
-            <span>Requested withdrawals</span>
-            <strong className="large-number">
-              {state.data.withdrawals.requested}
-            </strong>
-            <MoneyValue value={state.data.withdrawals.reserved} />
-          </article>
-          <article className="metric-card">
-            <span>Providers enabled</span>
-            <strong className="large-number">
-              {state.data.providers.enabled}
-            </strong>
-            <small>{state.data.providers.degraded} degraded</small>
-          </article>
-        </div>
+        <>
+          <div className="metric-grid">
+            <article className="metric-card">
+              <span>Users</span>
+              <strong className="large-number">{state.data.users.total}</strong>
+              <small>
+                {state.data.users.verified} verified ·{" "}
+                {state.data.users.limited} limited
+              </small>
+            </article>
+            <article className="metric-card">
+              <span>Available surveys</span>
+              <strong className="large-number">
+                {state.data.surveys.available}
+              </strong>
+              <small>
+                {state.data.surveys.pendingParticipations} pending
+                participations
+              </small>
+            </article>
+            <article className="metric-card">
+              <span>Requested withdrawals</span>
+              <strong className="large-number">
+                {state.data.withdrawals.requested}
+              </strong>
+              <MoneyValue value={state.data.withdrawals.reserved} />
+            </article>
+            <article className="metric-card">
+              <span>Providers enabled</span>
+              <strong className="large-number">
+                {state.data.providers.enabled}
+              </strong>
+              <small>{state.data.providers.degraded} degraded</small>
+            </article>
+          </div>
+          <div className="metric-grid">
+            <article className="metric-card">
+              <span>Active users</span>
+              <strong className="large-number">
+                {state.data.users.activeNow}
+              </strong>
+              <small>
+                {state.data.users.newToday} new today ·{" "}
+                {state.data.users.newThisMonth} this month
+              </small>
+            </article>
+            <article className="metric-card">
+              <span>Support queue</span>
+              <strong className="large-number">
+                {state.data.support.open}
+              </strong>
+              <small>{state.data.support.urgent} urgent</small>
+            </article>
+            <article className="metric-card">
+              <span>Operations</span>
+              <strong className="large-number">
+                {state.data.operations.jobsFailed +
+                  state.data.operations.emailFailed}
+              </strong>
+              <small>
+                {state.data.operations.jobsQueued} jobs ·{" "}
+                {state.data.operations.emailQueued} emails queued
+              </small>
+            </article>
+            <article className="metric-card">
+              <span>Security alerts</span>
+              <strong className="large-number">
+                {state.data.security.highLast24Hours}
+              </strong>
+              <small>High-severity events in 24 hours</small>
+            </article>
+          </div>
+          <div className="content-grid content-grid--two">
+            <article className="card">
+              <h2>Wallet liabilities</h2>
+              <dl className="detail-list">
+                <div>
+                  <dt>Validated</dt>
+                  <dd>
+                    <MoneyValue
+                      value={state.data.wallet.validatedLiability}
+                      compact
+                    />
+                  </dd>
+                </div>
+                <div>
+                  <dt>Withdrawable</dt>
+                  <dd>
+                    <MoneyValue
+                      value={state.data.wallet.withdrawableLiability}
+                      compact
+                    />
+                  </dd>
+                </div>
+              </dl>
+            </article>
+            <article className="card">
+              <h2>Content pipeline</h2>
+              <p className="large-number">{state.data.content.drafts}</p>
+              <p>drafts · {state.data.content.scheduled} scheduled</p>
+            </article>
+          </div>
+        </>
       ) : null}
     </section>
   );
@@ -94,13 +165,21 @@ function UserModerationCard({
   const [accountStatus, setAccountStatus] = useState<AccountStatus>(
     user.accountStatus,
   );
+  const [limitTemplateId, setLimitTemplateId] = useState(
+    user.limitTemplateId ?? "",
+  );
   const [reason, setReason] = useState("");
   const action = useAsyncAction<{ message: string }>();
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     const result = await action.run(() =>
-      api.admin.updateAccountState(user.id, { accountStatus, reason }),
+      api.admin.updateAccountState(user.id, {
+        accountStatus,
+        reason,
+        limitTemplateId:
+          accountStatus === "limited" ? limitTemplateId.trim() : null,
+      }),
     );
     if (result !== null) onChanged();
   }
@@ -128,6 +207,12 @@ function UserModerationCard({
           <dd>{user.limitTemplateId ?? "None"}</dd>
         </div>
       </dl>
+      <Link
+        className="button button--secondary"
+        to={`/app/admin/users/${user.id}`}
+      >
+        Open full user record
+      </Link>
       {action.state.status === "error" ? (
         <ErrorNotice error={action.state.error} />
       ) : null}
@@ -154,6 +239,19 @@ function UserModerationCard({
               ))}
             </select>
           </label>
+          {accountStatus === "limited" ? (
+            <label>
+              Limit template ID
+              <input
+                required
+                value={limitTemplateId}
+                onChange={(event) => setLimitTemplateId(event.target.value)}
+              />
+              <small>
+                Copy an active ID from the Limit templates admin page.
+              </small>
+            </label>
+          ) : null}
           <label>
             Audit reason
             <textarea
@@ -189,6 +287,14 @@ export function AdminUsers() {
       <PageHeader
         title="User moderation"
         description="Account-state changes are audited by the server."
+        actions={
+          <a
+            className="button button--secondary"
+            href="/v1/admin/users/export.csv"
+          >
+            Export users CSV
+          </a>
+        }
       />
       <form
         className="filter-bar"

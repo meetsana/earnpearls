@@ -41,6 +41,7 @@ describe("core screen accessibility", () => {
             },
             fee: { points: "0", usdMicros: "0", usd: "0.000000" },
             supportedForUser: true,
+            destinationType: "email",
           },
         ]}
       />,

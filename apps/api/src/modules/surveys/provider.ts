@@ -113,6 +113,10 @@ export class ProviderRegistry {
       );
   }
 
+  has(code: string): boolean {
+    return this.adapters.has(code);
+  }
+
   get(code: string): ProviderAdapter {
     const adapter = this.adapters.get(code);
     if (!adapter) {

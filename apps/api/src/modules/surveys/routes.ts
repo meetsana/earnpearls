@@ -1,6 +1,7 @@
 import {
   MessageSchema,
   SurveySchema,
+  SurveyParticipationSchema,
   SurveyStartResponseSchema,
   UuidSchema,
 } from "@earnpearls/contracts";
@@ -12,6 +13,8 @@ import { hashIp } from "../../lib/crypto.js";
 import { ProviderRegistry } from "./provider.js";
 import {
   listAvailableSurveys,
+  getSurvey,
+  listSurveyHistory,
   processProviderEvent,
   startSurvey,
 } from "./service.js";
@@ -29,11 +32,63 @@ export const surveyRoutes: FastifyPluginAsyncTypebox = async (app) => {
       schema: {
         tags: ["Surveys"],
         security: [{ cookieAuth: [] }],
+        querystring: Type.Object({
+          category: Type.Optional(Type.String({ maxLength: 120 })),
+          difficulty: Type.Optional(Type.String({ maxLength: 120 })),
+          device: Type.Optional(Type.String({ maxLength: 120 })),
+          sort: Type.Optional(
+            Type.Union([
+              Type.Literal("reward_desc"),
+              Type.Literal("time_asc"),
+              Type.Literal("newest"),
+            ]),
+          ),
+        }),
         response: { 200: Type.Array(SurveySchema) },
       },
     },
     async (request) =>
-      listAvailableSurveys(app, request.auth!.user.countryCode),
+      listAvailableSurveys(app, request.auth!.user.countryCode, request.query),
+  );
+
+  app.get(
+    "/history",
+    {
+      preHandler: [
+        app.authenticate,
+        app.authorize("survey.read", { requireVerifiedEmail: true }),
+      ],
+      schema: {
+        tags: ["Surveys"],
+        security: [{ cookieAuth: [] }],
+        querystring: Type.Object({
+          limit: Type.Optional(
+            Type.Integer({ minimum: 1, maximum: 200, default: 50 }),
+          ),
+        }),
+        response: { 200: Type.Array(SurveyParticipationSchema) },
+      },
+    },
+    async (request) =>
+      listSurveyHistory(app, request.auth!.user.id, request.query.limit ?? 50),
+  );
+
+  app.get(
+    "/:surveyId",
+    {
+      preHandler: [
+        app.authenticate,
+        app.authorize("survey.read", { requireVerifiedEmail: true }),
+      ],
+      schema: {
+        tags: ["Surveys"],
+        security: [{ cookieAuth: [] }],
+        params: Type.Object({ surveyId: UuidSchema }),
+        response: { 200: SurveySchema },
+      },
+    },
+    async (request) =>
+      getSurvey(app, request.auth!.user.countryCode, request.params.surveyId),
   );
 
   app.post(

@@ -52,8 +52,11 @@ jobs:
       - run: npm run typecheck
       - run: npm run db:migrate
       - run: npm test
+      - name: Execute every recurring operations job against PostgreSQL
+        run: npm run worker:operations:once --workspace @earnpearls/api
       - run: npm run build
       - run: npm run audit:mvp
+      - run: npm run audit:full
       - run: npm run staging:validate
       - name: Verify staging seed remains synthetic and payout-disabled
         if: github.ref == 'refs/heads/staging'

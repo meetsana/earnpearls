@@ -23,6 +23,7 @@ export type AppConfig = Readonly<{
   smtpUrl: string | null;
   emailFrom: string;
   emailWorkerPollMs: number;
+  operationsWorkerPollMs: number;
 }>;
 
 function getString(name: string, fallback?: string): string {
@@ -145,6 +146,12 @@ export function loadConfig(): AppConfig {
     smtpUrl: process.env.SMTP_URL?.trim() || null,
     emailFrom: getString("EMAIL_FROM", "EarnPearls <no-reply@example.com>"),
     emailWorkerPollMs: getInteger("EMAIL_WORKER_POLL_MS", 5_000, 1_000, 60_000),
+    operationsWorkerPollMs: getInteger(
+      "OPERATIONS_WORKER_POLL_MS",
+      15_000,
+      1_000,
+      300_000,
+    ),
   };
   assertProductionSecrets(config);
   return Object.freeze(config);

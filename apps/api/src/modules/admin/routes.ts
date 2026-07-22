@@ -2,6 +2,7 @@ import {
   AdminAccountStateBodySchema,
   AdminDashboardSchema,
   AdminParticipationDecisionBodySchema,
+  AdminWalletAdjustmentBodySchema,
   AdminWithdrawalDecisionBodySchema,
   MessageSchema,
   UuidSchema,
@@ -14,6 +15,7 @@ import {
   advanceWalletSettlement,
   changeAccountState,
   createLimitTemplate,
+  createWalletAdjustment,
   decideWithdrawal,
   getAdminDashboard,
   listLimitTemplates,
@@ -180,6 +182,33 @@ export const adminRoutes: FastifyPluginAsyncTypebox = async (app) => {
         request.body,
       );
       return { message: "Account state updated." };
+    },
+  );
+
+  app.post(
+    "/users/:userId/wallet-adjustments",
+    {
+      preHandler: [
+        app.authenticate,
+        app.verifyCsrf,
+        app.authorize("admin.wallet.adjust"),
+      ],
+      schema: {
+        tags: ["Admin"],
+        security: [{ cookieAuth: [], csrfToken: [] }],
+        params: Type.Object({ userId: UuidSchema }),
+        body: AdminWalletAdjustmentBodySchema,
+        response: { 200: MessageSchema },
+      },
+    },
+    async (request) => {
+      await createWalletAdjustment(
+        app,
+        request,
+        request.params.userId,
+        request.body,
+      );
+      return { message: "Wallet adjustment recorded." };
     },
   );
 

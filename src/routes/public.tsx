@@ -8,6 +8,7 @@ import {
 
 import { api } from "../api/endpoints";
 import { ErrorNotice, InlineSuccess } from "../components/AsyncStates";
+import { useApiResource } from "../hooks/useApiResource";
 import { useAsyncAction } from "../hooks/useAsyncAction";
 import { useSessionContext } from "../session/SessionProvider";
 
@@ -21,6 +22,10 @@ function PublicHeader() {
         EarnPearls
       </Link>
       <nav aria-label="Public navigation">
+        <Link to="/">Home</Link>
+        <Link to="/blog">Blog</Link>
+        <Link to="/faq">FAQ</Link>
+        <Link to="/about">About</Link>
         <Link to="/login">Log in</Link>
         <Link className="button button--primary" to="/register">
           Create account
@@ -30,7 +35,7 @@ function PublicHeader() {
   );
 }
 
-function PublicLayout({ children }: { children: ReactNode }) {
+export function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="public-layout">
       <a className="skip-link" href="#public-content">
@@ -41,7 +46,24 @@ function PublicLayout({ children }: { children: ReactNode }) {
         {children}
       </main>
       <footer className="public-footer">
-        EarnPearls · Your Time. Your Rewards.
+        <div>
+          <Link className="brand" to="/" aria-label="EarnPearls home">
+            <span className="brand-mark" aria-hidden="true">
+              ◆
+            </span>
+            EarnPearls
+          </Link>
+          <p>Your Time. Your Rewards.</p>
+        </div>
+        <nav aria-label="Footer navigation">
+          <Link to="/about">About</Link>
+          <Link to="/blog">Blog</Link>
+          <Link to="/faq">FAQ</Link>
+          <Link to="/contact">Contact</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/cookies">Cookies</Link>
+        </nav>
       </footer>
     </div>
   );
@@ -68,6 +90,7 @@ function AuthCard({
 }
 
 export function Home() {
+  const latestPosts = useApiResource(() => api.content.blog({ limit: 3 }));
   return (
     <PublicLayout>
       <section className="hero">
@@ -121,12 +144,132 @@ export function Home() {
           </p>
         </article>
       </section>
+      <section className="public-section" aria-labelledby="how-it-works-title">
+        <header className="public-section-heading">
+          <p className="eyebrow">How it works</p>
+          <h2 id="how-it-works-title">Earn with three clear steps</h2>
+        </header>
+        <ol className="step-grid">
+          <li className="card">
+            <span aria-hidden="true">1</span>
+            <h3>Create and verify</h3>
+            <p>Register in an enabled country and verify your email.</p>
+          </li>
+          <li className="card">
+            <span aria-hidden="true">2</span>
+            <h3>Choose a survey</h3>
+            <p>Review the reward, estimated time, and device requirements.</p>
+          </li>
+          <li className="card">
+            <span aria-hidden="true">3</span>
+            <h3>Track the reward</h3>
+            <p>Follow provider-confirmed progress through each wallet state.</p>
+          </li>
+        </ol>
+      </section>
+      <section className="public-section public-callout">
+        <div>
+          <p className="eyebrow">Designed around evidence</p>
+          <h2>Know what is available, pending, and ready</h2>
+          <p>
+            EarnPearls keeps survey validation, reward maturity, and withdrawal
+            review visible. Availability and timing always depend on real
+            provider evidence and your account eligibility.
+          </p>
+        </div>
+        <Link className="button button--secondary" to="/faq">
+          Read common questions
+        </Link>
+      </section>
+      <section className="public-section" aria-labelledby="security-title">
+        <div className="content-grid content-grid--two">
+          <article className="card">
+            <p className="eyebrow">Account controls</p>
+            <h2 id="security-title">Security you can see</h2>
+            <p>
+              Email verification, revocable sessions, password controls, and a
+              personal activity history help you understand account access.
+            </p>
+          </article>
+          <article className="card">
+            <p className="eyebrow">Support that stays with the case</p>
+            <h2>Trackable conversations</h2>
+            <p>
+              Members can open a support ticket, reply securely, and follow its
+              resolution without losing the conversation history.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section className="public-section" aria-labelledby="providers-title">
+        <header className="public-section-heading">
+          <p className="eyebrow">Survey availability</p>
+          <h2 id="providers-title">A provider-ready platform</h2>
+          <p>
+            EarnPearls uses a modular integration layer. A provider is shown to
+            members only after its integration, credentials, eligibility rules,
+            and health controls are enabled. We do not claim partnerships that
+            have not been verified.
+          </p>
+        </header>
+      </section>
+      <section className="public-section" aria-labelledby="latest-guides-title">
+        <header className="public-section-heading">
+          <p className="eyebrow">Learn before you earn</p>
+          <h2 id="latest-guides-title">Latest guides</h2>
+        </header>
+        {latestPosts.state.status === "success" &&
+        latestPosts.state.data.length > 0 ? (
+          <div className="content-grid content-grid--three">
+            {latestPosts.state.data.map((post) => (
+              <article className="card blog-card" key={post.slug}>
+                <p className="eyebrow">{post.categoryName ?? "EarnPearls"}</p>
+                <h3>
+                  <Link to={`/blog/${post.slug}`}>{post.title}</Link>
+                </h3>
+                <p>{post.excerpt}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <article className="card">
+            <h3>EarnPearls education</h3>
+            <p>
+              Published guides about reward statuses, account security, and
+              responsible survey participation are available in the blog.
+            </p>
+            <Link to="/blog">Browse the blog</Link>
+          </article>
+        )}
+      </section>
+      <section className="public-section" aria-labelledby="stories-title">
+        <article className="card testimonial-placeholder">
+          <p className="eyebrow">Member stories</p>
+          <h2 id="stories-title">Real experiences only</h2>
+          <p>
+            Verified member stories will appear here only with permission after
+            public launch. EarnPearls does not publish invented testimonials or
+            guaranteed earnings claims.
+          </p>
+        </article>
+      </section>
+      <section className="public-section public-cta">
+        <p className="eyebrow">Ready when you are</p>
+        <h2>Start with a verified EarnPearls account</h2>
+        <p>
+          Registration is available only in the countries shown in the form.
+        </p>
+        <Link className="button button--primary" to="/register">
+          Create your account
+        </Link>
+      </section>
     </PublicLayout>
   );
 }
 
 export function Register() {
   const action = useAsyncAction<{ message: string }>();
+  const countries = useApiResource(() => api.content.countries());
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -181,23 +324,36 @@ export function Register() {
               }
             />
           </label>
+          {countries.state.status === "error" ? (
+            <ErrorNotice
+              error={countries.state.error}
+              onRetry={countries.reload}
+            />
+          ) : null}
           <label>
-            Country code
-            <input
+            Country
+            <select
               required
-              minLength={2}
-              maxLength={2}
-              pattern="[A-Za-z]{2}"
-              autoCapitalize="characters"
-              aria-describedby="country-hint"
+              disabled={countries.state.status !== "success"}
               value={form.countryCode}
               onChange={(event) =>
                 setForm({ ...form, countryCode: event.target.value })
               }
-            />
-            <small id="country-hint">
-              Your two-letter ISO country code, for example US.
-            </small>
+            >
+              <option value="">
+                {countries.state.status === "loading"
+                  ? "Loading enabled countries…"
+                  : "Select your country"}
+              </option>
+              {countries.state.status === "success"
+                ? countries.state.data.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.name}
+                    </option>
+                  ))
+                : null}
+            </select>
+            <small>Only currently enabled countries are listed.</small>
           </label>
           <label>
             Password

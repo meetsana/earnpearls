@@ -2,7 +2,7 @@
 
 ## Contract integration — 2026-07-22
 
-- Recovered all 22 Fable 5 scaffold files from their Notion page mirrors.
+- Consolidated the initial frontend scaffold into the repository-owned application.
 - Replaced 12 contract placeholders with the canonical contract.
 - Corrected session, user, money, wallet, survey, withdrawal, dashboard, admin, cursor,
   and error payloads.
@@ -17,6 +17,6 @@
   canonical errors, and stable withdrawal idempotency behavior.
 - Added frontend tests, architecture, API matrix, and QA evidence.
 
-The original JSX/CSS prototype files remain in the repository as unreferenced visual
-reference material. They are not imported by the production entry point and their sample
-balances, surveys, providers, leaderboard, and profile controls cannot reach users.
+The unreferenced JSX/CSS prototype and its invented sample balances, surveys, providers,
+leaderboard, and payment controls were removed when the TypeScript application became the
+single maintained frontend.

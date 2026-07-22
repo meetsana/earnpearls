@@ -9,9 +9,22 @@ import { decryptSensitive } from "../lib/crypto.js";
 type OutboxRow = Readonly<{
   id: string;
   recipient: string;
-  template_code: "verify_email" | "reset_password";
-  template_data: { tokenCiphertext: string; expiresAt: string };
+  template_code: "verify_email" | "reset_password" | "notification";
+  template_data:
+    | { tokenCiphertext: string; expiresAt: string }
+    | {
+        notificationId: string;
+        title: string;
+        body: string;
+        actionUrl: string | null;
+      };
   attempt_count: number;
+}>;
+
+type TemplateRow = Readonly<{
+  subject_template: string;
+  text_template: string;
+  html_template: string;
 }>;
 
 const config = loadConfig();
@@ -21,26 +34,88 @@ const database = new Database(config);
 const transport = nodemailer.createTransport(config.smtpUrl);
 let stopping = false;
 
-function renderMessage(row: OutboxRow) {
-  const token = decryptSensitive(
-    row.template_data.tokenCiphertext,
-    config.dataEncryptionKey,
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function interpolate(
+  source: string,
+  variables: Readonly<Record<string, string>>,
+  escapeValues: boolean,
+): string {
+  const rendered = source.replace(
+    /\{\{([a-z_]+)\}\}/g,
+    (_token, name: string) => {
+      const value = variables[name];
+      if (value === undefined)
+        throw new Error(`Missing email template variable: ${name}`);
+      return escapeValues ? escapeHtml(value) : value;
+    },
   );
-  const path =
-    row.template_code === "verify_email" ? "/verify-email" : "/reset-password";
-  const link = new URL(path, config.publicAppUrl);
-  link.searchParams.set("token", token);
-  if (row.template_code === "verify_email") {
-    return {
-      subject: "Verify your EarnPearls email",
-      text: `Verify your EarnPearls email: ${link.toString()}\n\nThis link expires at ${row.template_data.expiresAt}.`,
-      html: `<p>Verify your EarnPearls email:</p><p><a href="${link.toString()}">Verify email</a></p><p>This link expires at ${row.template_data.expiresAt}.</p>`,
+  if (rendered.includes("{{") || rendered.includes("}}")) {
+    throw new Error("Email template contains an invalid variable token");
+  }
+  return rendered;
+}
+
+async function renderMessage(row: OutboxRow) {
+  const template = await database.query<TemplateRow>(
+    `SELECT subject_template, text_template, html_template
+     FROM email_templates WHERE code=$1 AND enabled=TRUE`,
+    [row.template_code],
+  );
+  const selected = template.rows[0];
+  if (!selected) {
+    throw new Error(`Enabled email template not found: ${row.template_code}`);
+  }
+  let variables: Record<string, string>;
+  if (row.template_code === "notification") {
+    const data = row.template_data as {
+      notificationId: string;
+      title: string;
+      body: string;
+      actionUrl: string | null;
+    };
+    const actionLink = data.actionUrl
+      ? new URL(data.actionUrl, config.publicAppUrl).toString()
+      : config.publicAppUrl;
+    variables = {
+      title: data.title,
+      body: data.body,
+      action_url: actionLink,
+    };
+  } else {
+    const tokenData = row.template_data as {
+      tokenCiphertext: string;
+      expiresAt: string;
+    };
+    const token = decryptSensitive(
+      tokenData.tokenCiphertext,
+      config.dataEncryptionKey,
+    );
+    const path =
+      row.template_code === "verify_email"
+        ? "/verify-email"
+        : "/reset-password";
+    const link = new URL(path, config.publicAppUrl);
+    link.searchParams.set("token", token);
+    variables = {
+      action_url: link.toString(),
+      expires_at: tokenData.expiresAt,
     };
   }
   return {
-    subject: "Reset your EarnPearls password",
-    text: `Reset your EarnPearls password: ${link.toString()}\n\nThis link expires at ${row.template_data.expiresAt}.`,
-    html: `<p>Reset your EarnPearls password:</p><p><a href="${link.toString()}">Reset password</a></p><p>This link expires at ${row.template_data.expiresAt}.</p>`,
+    subject: interpolate(selected.subject_template, variables, false).replace(
+      /[\r\n]+/g,
+      " ",
+    ),
+    text: interpolate(selected.text_template, variables, false),
+    html: interpolate(selected.html_template, variables, true),
   };
 }
 
@@ -72,7 +147,7 @@ async function claimBatch(): Promise<OutboxRow[]> {
 
 async function deliver(row: OutboxRow): Promise<void> {
   try {
-    const message = renderMessage(row);
+    const message = await renderMessage(row);
     await transport.sendMail({
       from: config.emailFrom,
       to: row.recipient,
@@ -83,6 +158,16 @@ async function deliver(row: OutboxRow): Promise<void> {
        WHERE id = $1`,
       [row.id],
     );
+    if (row.template_code === "notification") {
+      const data = row.template_data as { notificationId: string };
+      await database.query(
+        `UPDATE notification_deliveries
+         SET status = 'delivered', attempted_at = NOW(), delivered_at = NOW(),
+           failure_reason = NULL
+         WHERE notification_id = $1 AND channel = 'email'`,
+        [data.notificationId],
+      );
+    }
   } catch (error) {
     const attempts = row.attempt_count + 1;
     const dead = attempts >= 8;
@@ -99,6 +184,19 @@ async function deliver(row: OutboxRow): Promise<void> {
         error instanceof Error ? error.message : "Unknown error",
       ],
     );
+    if (row.template_code === "notification") {
+      const data = row.template_data as { notificationId: string };
+      await database.query(
+        `UPDATE notification_deliveries
+         SET status = $2, attempted_at = NOW(), failure_reason = $3
+         WHERE notification_id = $1 AND channel = 'email'`,
+        [
+          data.notificationId,
+          dead ? "failed" : "queued",
+          error instanceof Error ? error.message : "Unknown error",
+        ],
+      );
+    }
   }
 }
 

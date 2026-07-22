@@ -4,10 +4,12 @@ import type { Withdrawal, WithdrawalMethodSchema } from "@earnpearls/contracts";
 import type { Static } from "@sinclair/typebox";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
+import { writeUserActivity } from "../../lib/activity.js";
 import { writeAudit } from "../../lib/audit.js";
 import { encryptSensitive, hashIp, maskDestination } from "../../lib/crypto.js";
 import { AppError } from "../../lib/errors.js";
 import { pointsToUsdMicros, toMoney } from "../../lib/money.js";
+import { createNotification } from "../notifications/service.js";
 import { getBucketBalance, lockUserWallet } from "../wallet/service.js";
 
 type WithdrawalMethod = Static<typeof WithdrawalMethodSchema>;
@@ -20,6 +22,8 @@ type MethodRow = Readonly<{
   country_codes: string[];
   withdrawals_enabled: boolean;
   points_per_usd: string;
+  processing_days: number;
+  destination_type: "email" | "crypto_address" | "account_reference";
 }>;
 type WithdrawalRow = Readonly<{
   id: string;
@@ -32,7 +36,9 @@ type WithdrawalRow = Readonly<{
   destination_masked: string;
   requested_at: Date;
   updated_at: Date;
+  estimated_completion_at: Date | null;
   processed_at: Date | null;
+  payout_reference: string | null;
   rejection_reason: string | null;
 }>;
 
@@ -46,7 +52,9 @@ function mapWithdrawal(row: WithdrawalRow): Withdrawal {
     destinationMasked: row.destination_masked,
     requestedAt: row.requested_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
+    estimatedCompletionAt: row.estimated_completion_at?.toISOString() ?? null,
     processedAt: row.processed_at?.toISOString() ?? null,
+    payoutReference: row.payout_reference,
     rejectionReason: row.rejection_reason,
   };
 }
@@ -59,7 +67,17 @@ export async function listWithdrawalMethods(
     `SELECT wm.code, wm.display_name, wm.enabled,
       wm.minimum_points::TEXT, wm.fee_points::TEXT, wm.country_codes,
       COALESCE((SELECT (value->>'enabled')::BOOLEAN FROM system_settings WHERE key = 'withdrawals'), FALSE) AS withdrawals_enabled,
-      COALESCE((SELECT value->>'value' FROM system_settings WHERE key = 'points_per_usd'), '1000') AS points_per_usd
+      COALESCE((SELECT value->>'value' FROM system_settings WHERE key = 'points_per_usd'), '1000') AS points_per_usd,
+      CASE
+        WHEN (wm.configuration->>'processingDays') ~ '^[0-9]+$'
+          AND (wm.configuration->>'processingDays')::INTEGER BETWEEN 1 AND 30
+        THEN (wm.configuration->>'processingDays')::INTEGER
+        ELSE 5
+      END AS processing_days,
+      CASE WHEN wm.destination_schema->>'type' IN (
+        'email','crypto_address','account_reference'
+      ) THEN wm.destination_schema->>'type' ELSE 'account_reference' END
+        AS destination_type
      FROM withdrawal_methods wm ORDER BY wm.display_name`,
   );
   return result.rows.map((row) => {
@@ -79,6 +97,7 @@ export async function listWithdrawalMethods(
         pointsToUsdMicros(BigInt(row.fee_points), pointsPerUsd),
       ),
       supportedForUser,
+      destinationType: row.destination_type,
     };
   });
 }
@@ -99,7 +118,17 @@ export async function createWithdrawal(
     `SELECT wm.code, wm.display_name, wm.enabled,
       wm.minimum_points::TEXT, wm.fee_points::TEXT, wm.country_codes,
       COALESCE((SELECT (value->>'enabled')::BOOLEAN FROM system_settings WHERE key = 'withdrawals'), FALSE) AS withdrawals_enabled,
-      COALESCE((SELECT value->>'value' FROM system_settings WHERE key = 'points_per_usd'), '1000') AS points_per_usd
+      COALESCE((SELECT value->>'value' FROM system_settings WHERE key = 'points_per_usd'), '1000') AS points_per_usd,
+      CASE
+        WHEN (wm.configuration->>'processingDays') ~ '^[0-9]+$'
+          AND (wm.configuration->>'processingDays')::INTEGER BETWEEN 1 AND 30
+        THEN (wm.configuration->>'processingDays')::INTEGER
+        ELSE 5
+      END AS processing_days,
+      CASE WHEN wm.destination_schema->>'type' IN (
+        'email','crypto_address','account_reference'
+      ) THEN wm.destination_schema->>'type' ELSE 'account_reference' END
+        AS destination_type
      FROM withdrawal_methods wm WHERE wm.code = $1`,
     [input.methodCode],
   );
@@ -128,6 +157,27 @@ export async function createWithdrawal(
       "The withdrawal amount is below the configured minimum.",
     );
   }
+  const destination = input.destination.trim();
+  if (
+    method.destination_type === "email" &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(destination)
+  ) {
+    throw new AppError(
+      400,
+      "WITHDRAWAL_DESTINATION_INVALID",
+      "Enter a valid email payout destination.",
+    );
+  }
+  if (
+    method.destination_type !== "email" &&
+    (destination.length < 3 || destination.length > 500)
+  ) {
+    throw new AppError(
+      400,
+      "WITHDRAWAL_DESTINATION_INVALID",
+      "Enter a valid payout destination.",
+    );
+  }
 
   const feePoints = BigInt(method.fee_points);
   const totalPoints = points + feePoints;
@@ -138,16 +188,16 @@ export async function createWithdrawal(
   const transactionId = randomUUID();
   const eventId = randomUUID();
   const encryptedDestination = encryptSensitive(
-    input.destination,
+    destination,
     app.config.dataEncryptionKey,
   );
-  const maskedDestination = maskDestination(input.destination);
+  const maskedDestination = maskDestination(destination);
   const requestHash = createHash("sha256")
     .update(
       JSON.stringify({
         methodCode: input.methodCode,
         points: input.points,
-        destination: input.destination,
+        destination,
       }),
     )
     .digest("hex");
@@ -174,7 +224,8 @@ export async function createWithdrawal(
     const existing = await client.query<WithdrawalRow>(
       `SELECT id, method_code, amount_points::TEXT, amount_usd_micros::TEXT,
         fee_points::TEXT, fee_usd_micros::TEXT, status, destination_masked,
-        requested_at, updated_at, processed_at, rejection_reason
+        requested_at, updated_at, estimated_completion_at, processed_at,
+        payout_reference, rejection_reason
        FROM withdrawals WHERE user_id = $1 AND idempotency_key = $2`,
       [auth.user.id, input.idempotencyKey],
     );
@@ -242,11 +293,14 @@ export async function createWithdrawal(
       `INSERT INTO withdrawals (
         id, user_id, method_code, wallet_transaction_id,
         amount_points, amount_usd_micros, fee_points, fee_usd_micros,
-        destination_ciphertext, destination_masked, idempotency_key
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        destination_ciphertext, destination_masked, idempotency_key,
+        estimated_completion_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+        NOW() + ($12::TEXT || ' days')::INTERVAL)
       RETURNING id, method_code, amount_points::TEXT, amount_usd_micros::TEXT,
         fee_points::TEXT, fee_usd_micros::TEXT, status, destination_masked,
-        requested_at, updated_at, processed_at, rejection_reason`,
+        requested_at, updated_at, estimated_completion_at, processed_at,
+        payout_reference, rejection_reason`,
       [
         withdrawalId,
         auth.user.id,
@@ -259,8 +313,35 @@ export async function createWithdrawal(
         encryptedDestination,
         maskedDestination,
         input.idempotencyKey,
+        method.processing_days,
       ],
     );
+    await client.query(
+      `INSERT INTO withdrawal_events (
+        id, withdrawal_id, from_status, to_status, actor_type, actor_id, reason
+       ) VALUES ($1, $2, NULL, 'requested', 'user', $3, $4)`,
+      [
+        randomUUID(),
+        withdrawalId,
+        auth.user.id,
+        "User submitted withdrawal request",
+      ],
+    );
+    await writeUserActivity(client, {
+      userId: auth.user.id,
+      eventType: "withdrawal.requested",
+      summary: "Withdrawal request submitted",
+      targetType: "withdrawal",
+      targetId: withdrawalId,
+      metadata: { methodCode: method.code, points: points.toString() },
+    });
+    await createNotification(client, {
+      userId: auth.user.id,
+      category: "withdrawal",
+      title: "Withdrawal requested",
+      body: "Your withdrawal request is now waiting for review.",
+      actionUrl: "/app/withdrawals",
+    });
     await writeAudit(client, {
       actorType: "user",
       actorId: auth.user.id,
@@ -287,7 +368,8 @@ export async function listWithdrawals(
   const result = await app.db.query<WithdrawalRow>(
     `SELECT id, method_code, amount_points::TEXT, amount_usd_micros::TEXT,
       fee_points::TEXT, fee_usd_micros::TEXT, status, destination_masked,
-      requested_at, updated_at, processed_at, rejection_reason
+      requested_at, updated_at, estimated_completion_at, processed_at,
+      payout_reference, rejection_reason
      FROM withdrawals WHERE user_id = $1
      ORDER BY requested_at DESC LIMIT 100`,
     [userId],

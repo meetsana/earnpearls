@@ -3,15 +3,27 @@ import { readFile } from "node:fs/promises";
 
 import { parse } from "yaml";
 
-const [blueprintSource, dockerfile, migration, seed, ci, codeql] =
-  await Promise.all([
-    readFile("render.yaml", "utf8"),
-    readFile("infra/docker/api.Dockerfile", "utf8"),
-    readFile("apps/api/migrations/0001_foundation.sql", "utf8"),
-    readFile("apps/api/src/db/seed.ts", "utf8"),
-    readFile(".github/workflows/ci.yml", "utf8"),
-    readFile(".github/workflows/codeql.yml", "utf8"),
-  ]);
+const [
+  blueprintSource,
+  dockerfile,
+  foundationMigration,
+  productMigration,
+  seed,
+  ci,
+  codeql,
+  supervisor,
+  apiPackage,
+] = await Promise.all([
+  readFile("render.yaml", "utf8"),
+  readFile("infra/docker/api.Dockerfile", "utf8"),
+  readFile("apps/api/migrations/0001_foundation.sql", "utf8"),
+  readFile("apps/api/migrations/0002_product_domains.sql", "utf8"),
+  readFile("apps/api/src/db/seed.ts", "utf8"),
+  readFile(".github/workflows/ci.yml", "utf8"),
+  readFile(".github/workflows/codeql.yml", "utf8"),
+  readFile("infra/scripts/staging-supervisor.mjs", "utf8"),
+  readFile("apps/api/package.json", "utf8"),
+]);
 
 const blueprint = parse(blueprintSource);
 const services = blueprint.services ?? [];
@@ -106,8 +118,13 @@ check(
   "Container health checks must follow the provider-assigned port",
 );
 check(
-  migration.includes(`'withdrawals', '{"enabled":false`),
+  foundationMigration.includes(`'withdrawals', '{"enabled":false`),
   "Global withdrawals must default off",
+);
+check(
+  productMigration.includes(`'features', '{"surveys":true`) &&
+    productMigration.includes(`"withdrawals":true`),
+  "Withdrawal UI may be visible while its independent global kill switch remains off",
 );
 check(
   seed.includes("demo_paypal") &&
@@ -132,6 +149,20 @@ check(
 check(
   ci.includes("docker build -f infra/docker/api.Dockerfile"),
   "CI must build the staging runtime image",
+);
+check(
+  ci.includes("worker:operations:once") &&
+    apiPackage.includes("OPERATIONS_WORKER_RUN_ONCE=true"),
+  "CI must execute recurring operations jobs against PostgreSQL in fail-fast mode",
+);
+check(
+  supervisor.includes("dist/workers/operations.js") &&
+    env.OPERATIONS_WORKER_POLL_MS?.value,
+  "The staging supervisor must run and configure the operations worker",
+);
+check(
+  !blueprintSource.includes("maxShutdownDelaySeconds"),
+  "Free-tier services cannot configure a maximum shutdown delay",
 );
 check(
   !/re_(?:[A-Za-z0-9_-]{16,})/.test(blueprintSource),

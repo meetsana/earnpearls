@@ -22,7 +22,10 @@ The frontend suite covers:
 - dot-notation capability matching, absent restricted navigation, and rejection of
   legacy colon syntax;
 - a truthful withdrawal-disabled state;
-- automated `axe-core` scans of the public home and withdrawal-disabled surfaces.
+- three automated `axe-core` scans covering the public home, withdrawal-disabled state,
+  and disabled demo-method disclosure without a destination field;
+- canonical `/index.html`, `/dashboard`, `/admin`, admin subpath, query, and fragment routing;
+- capability/feature-filtered navigation and the complete typed endpoint registry.
 
 ## Accessibility implementation
 

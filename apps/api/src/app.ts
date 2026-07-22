@@ -12,12 +12,24 @@ import {
   isUniqueViolation,
 } from "./lib/errors.js";
 import { adminRoutes } from "./modules/admin/routes.js";
+import { adminInsightsRoutes } from "./modules/admin/insights-routes.js";
+import { adminLeaderboardRoutes } from "./modules/admin/leaderboard-routes.js";
+import { adminPlatformRoutes } from "./modules/admin/platform-routes.js";
+import { adminSupportRoutes } from "./modules/admin/support-routes.js";
+import { adminContentRoutes } from "./modules/admin/content-routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
+import { contentRoutes } from "./modules/content/routes.js";
 import { dashboardRoutes } from "./modules/dashboard/routes.js";
+import { leaderboardRoutes } from "./modules/leaderboards/routes.js";
+import { notificationRoutes } from "./modules/notifications/routes.js";
 import { surveyRoutes } from "./modules/surveys/routes.js";
+import { supportRoutes } from "./modules/support/routes.js";
+import { userRoutes } from "./modules/users/routes.js";
 import { walletRoutes } from "./modules/wallet/routes.js";
 import { withdrawalRoutes } from "./modules/withdrawals/routes.js";
 import { authenticationPlugin } from "./plugins/authentication.js";
+import { featureFlagPlugin } from "./plugins/features.js";
+import { maintenancePlugin } from "./plugins/maintenance.js";
 import { securityPlugin } from "./plugins/security.js";
 import { healthRoutes } from "./routes/health.js";
 
@@ -62,7 +74,7 @@ export async function buildApp(options: BuildAppOptions = {}) {
         title: "EarnPearls API",
         description:
           "Version 1 API for authentication, surveys, wallet, withdrawals, and administration.",
-        version: "0.1.0",
+        version: "1.0.0",
       },
       servers: [{ url: "/v1", description: "Current origin" }],
       components: {
@@ -90,10 +102,15 @@ export async function buildApp(options: BuildAppOptions = {}) {
       },
       tags: [
         { name: "Auth" },
+        { name: "Content" },
         { name: "Dashboard" },
+        { name: "Leaderboards" },
+        { name: "Notifications" },
         { name: "Wallet" },
         { name: "Surveys" },
+        { name: "Support" },
         { name: "Withdrawals" },
+        { name: "Users" },
         { name: "Admin" },
         { name: "Provider Webhooks" },
         { name: "Health" },
@@ -108,26 +125,9 @@ export async function buildApp(options: BuildAppOptions = {}) {
     });
   }
 
-  await app.register(securityPlugin);
-  await app.register(authenticationPlugin);
-  await app.register(healthRoutes);
-  await app.register(authRoutes, { prefix: "/v1/auth" });
-  await app.register(dashboardRoutes, { prefix: "/v1/dashboard" });
-  await app.register(walletRoutes, { prefix: "/v1/wallet" });
-  await app.register(surveyRoutes, { prefix: "/v1/surveys" });
-  await app.register(withdrawalRoutes, { prefix: "/v1/withdrawals" });
-  await app.register(adminRoutes, { prefix: "/v1/admin" });
-
-  app.setNotFoundHandler(async (request, reply) => {
-    return reply.code(404).send({
-      error: {
-        code: "ROUTE_NOT_FOUND",
-        message: "The requested route does not exist.",
-        requestId: request.id,
-      },
-    });
-  });
-
+  // Error handlers are encapsulated by Fastify. Install the canonical
+  // envelope before registering hooks and routes so onRequest/preHandler
+  // failures use the same contract as route-handler failures.
   app.setErrorHandler(async (error, request, reply) => {
     const fastifyError = error as FastifyError;
     let statusCode = 500;
@@ -165,6 +165,38 @@ export async function buildApp(options: BuildAppOptions = {}) {
         message,
         requestId: request.id,
         ...(details === undefined ? {} : { details }),
+      },
+    });
+  });
+
+  await app.register(securityPlugin);
+  await app.register(maintenancePlugin);
+  await app.register(featureFlagPlugin);
+  await app.register(authenticationPlugin);
+  await app.register(healthRoutes);
+  await app.register(authRoutes, { prefix: "/v1/auth" });
+  await app.register(contentRoutes, { prefix: "/v1/content" });
+  await app.register(dashboardRoutes, { prefix: "/v1/dashboard" });
+  await app.register(leaderboardRoutes, { prefix: "/v1/leaderboards" });
+  await app.register(notificationRoutes, { prefix: "/v1/notifications" });
+  await app.register(walletRoutes, { prefix: "/v1/wallet" });
+  await app.register(surveyRoutes, { prefix: "/v1/surveys" });
+  await app.register(supportRoutes, { prefix: "/v1/support" });
+  await app.register(withdrawalRoutes, { prefix: "/v1/withdrawals" });
+  await app.register(userRoutes, { prefix: "/v1/users" });
+  await app.register(adminRoutes, { prefix: "/v1/admin" });
+  await app.register(adminPlatformRoutes, { prefix: "/v1/admin" });
+  await app.register(adminSupportRoutes, { prefix: "/v1/admin" });
+  await app.register(adminContentRoutes, { prefix: "/v1/admin" });
+  await app.register(adminInsightsRoutes, { prefix: "/v1/admin" });
+  await app.register(adminLeaderboardRoutes, { prefix: "/v1/admin" });
+
+  app.setNotFoundHandler(async (request, reply) => {
+    return reply.code(404).send({
+      error: {
+        code: "ROUTE_NOT_FOUND",
+        message: "The requested route does not exist.",
+        requestId: request.id,
       },
     });
   });

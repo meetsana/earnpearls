@@ -1,6 +1,6 @@
 {
   "name": "@earnpearls/api",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,6 +11,8 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
     "worker:email": "node --env-file-if-exists=.env --import tsx src/workers/email.ts",
+    "worker:operations": "node --env-file-if-exists=.env --import tsx src/workers/operations.ts",
+    "worker:operations:once": "OPERATIONS_WORKER_RUN_ONCE=true node --env-file-if-exists=.env --import tsx src/workers/operations.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",

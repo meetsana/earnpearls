@@ -1,0 +1,17 @@
+{
+  "name": "EarnPearls",
+  "short_name": "EarnPearls",
+  "description": "Your Time. Your Rewards.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#112848",
+  "icons": [
+    {
+      "src": "/brand-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

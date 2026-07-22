@@ -8,6 +8,7 @@ import type { Static } from "@sinclair/typebox";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import type { Queryable } from "../../db/database.js";
+import { writeUserActivity } from "../../lib/activity.js";
 import { writeAudit, writeSecurityEvent } from "../../lib/audit.js";
 import {
   encryptSensitive,
@@ -19,6 +20,7 @@ import {
 } from "../../lib/crypto.js";
 import { AppError, isUniqueViolation } from "../../lib/errors.js";
 import type { AuthenticatedUser } from "../../types/auth.js";
+import { createNotification } from "../notifications/service.js";
 
 type RegisterBody = Static<typeof RegisterBodySchema>;
 type LoginBody = Static<typeof LoginBodySchema>;
@@ -50,7 +52,7 @@ const weakPasswords = new Set([
   "letmein12345",
 ]);
 
-function validatePassword(password: string, email?: string): void {
+export function validatePassword(password: string, email?: string): void {
   const normalized = password.toLowerCase();
   if (weakPasswords.has(normalized)) {
     throw new AppError(400, "PASSWORD_WEAK", "Choose a less common password.");
@@ -166,6 +168,13 @@ export async function registerUser(
         [userId],
       );
       await queueAuthToken(app, client, userId, email, "verify_email");
+      await writeUserActivity(client, {
+        userId,
+        eventType: "account.registered",
+        summary: "EarnPearls account created",
+        targetType: "user",
+        targetId: userId,
+      });
       await writeAudit(client, {
         actorType: "user",
         actorId: userId,
@@ -193,7 +202,7 @@ export async function loginUser(
       u.account_status_code, a.blocks_login, u.email_verified_at, u.created_at
      FROM users u
      JOIN account_states a ON a.code = u.account_status_code
-     WHERE u.email = $1`,
+     WHERE u.email = $1 AND u.deleted_at IS NULL`,
     [email],
   );
   const row = result.rows[0];
@@ -246,6 +255,13 @@ export async function loginUser(
     await client.query("UPDATE users SET last_login_at = NOW() WHERE id = $1", [
       row.id,
     ]);
+    await writeUserActivity(client, {
+      userId: row.id,
+      eventType: "security.login",
+      summary: "Signed in to EarnPearls",
+      targetType: "session",
+      targetId: row.id,
+    });
     await writeAudit(client, {
       actorType: "user",
       actorId: row.id,
@@ -287,6 +303,13 @@ export async function consumeEmailVerification(
       "UPDATE auth_tokens SET consumed_at = NOW() WHERE id = $1",
       [authToken.id],
     );
+    await writeUserActivity(client, {
+      userId: authToken.user_id,
+      eventType: "account.email_verified",
+      summary: "Email address verified",
+      targetType: "user",
+      targetId: authToken.user_id,
+    });
     await writeAudit(client, {
       actorType: "user",
       actorId: authToken.user_id,
@@ -294,6 +317,13 @@ export async function consumeEmailVerification(
       targetType: "user",
       targetId: authToken.user_id,
       outcome: "success",
+    });
+    await createNotification(client, {
+      userId: authToken.user_id,
+      category: "security",
+      title: "Email verified",
+      body: "Your EarnPearls email address is now verified.",
+      actionUrl: "/app",
     });
   });
 }
@@ -304,7 +334,7 @@ export async function requestPasswordReset(
 ): Promise<void> {
   const email = emailInput.trim().toLowerCase();
   const user = await app.db.query<{ id: string }>(
-    "SELECT id FROM users WHERE email = $1",
+    "SELECT id FROM users WHERE email = $1 AND deleted_at IS NULL",
     [email],
   );
   if (!user.rows[0]) return;
@@ -348,6 +378,13 @@ export async function resetPassword(
        WHERE user_id = $1 AND revoked_at IS NULL`,
       [authToken.user_id],
     );
+    await writeUserActivity(client, {
+      userId: authToken.user_id,
+      eventType: "security.password_reset",
+      summary: "Password reset completed",
+      targetType: "user",
+      targetId: authToken.user_id,
+    });
     await writeAudit(client, {
       actorType: "user",
       actorId: authToken.user_id,
@@ -355,6 +392,13 @@ export async function resetPassword(
       targetType: "user",
       targetId: authToken.user_id,
       outcome: "success",
+    });
+    await createNotification(client, {
+      userId: authToken.user_id,
+      category: "security",
+      title: "Password reset completed",
+      body: "Your password was reset and all existing sessions were signed out.",
+      actionUrl: "/login",
     });
   });
 }

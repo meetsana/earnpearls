@@ -2,7 +2,7 @@
 
 Clock start: **2026-07-21 18:23 PKT**
 
-Status: **IN PROGRESS — production-oriented MVP, not a production release**
+Status: **SUPERSEDED — retained as an implementation history checkpoint**
 
 ## Authorized scope
 
@@ -13,7 +13,7 @@ Status: **IN PROGRESS — production-oriented MVP, not a production release**
 - Configurable withdrawals with safe default-off policy
 - RBAC-protected Super Admin operations
 - Security controls, auditability, CI, and deployable containers
-- Parallel frontend implementation through the Opus 4.8 handoff
+- Repository-owned frontend implementation and contract integration
 
 ## Delivery sequence
 

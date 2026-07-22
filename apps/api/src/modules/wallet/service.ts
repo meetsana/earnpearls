@@ -10,7 +10,7 @@ import type { PoolClient } from "pg";
 
 import type { Database, Queryable } from "../../db/database.js";
 import { AppError } from "../../lib/errors.js";
-import { toMoney } from "../../lib/money.js";
+import { formatUsdMicros, toMoney } from "../../lib/money.js";
 
 export type WalletBucket = Static<typeof WalletBucketSchema>;
 type ActorType = "system" | "user" | "admin" | "provider";
@@ -242,7 +242,13 @@ export async function getWalletSummary(
   database: Database,
   userId: string,
 ): Promise<WalletSummary> {
-  const [balancesResult, earningsResult, conversionResult] = await Promise.all([
+  const [
+    balancesResult,
+    earningsResult,
+    conversionResult,
+    currencySettingsResult,
+    userCurrencyResult,
+  ] = await Promise.all([
     database.query<BalanceRow>(
       `SELECT bucket, points::TEXT, usd_micros::TEXT FROM wallet_balances WHERE user_id = $1`,
       [userId],
@@ -258,7 +264,18 @@ export async function getWalletSummary(
     ),
     database.query<{ points_per_usd: string }>(
       `SELECT COALESCE(value->>'value', '1000') AS points_per_usd
-       FROM system_settings WHERE key = 'points_per_usd'`,
+      FROM system_settings WHERE key = 'points_per_usd'`,
+    ),
+    database.query<{
+      value: {
+        localEstimatesEnabled?: boolean;
+        rates?: Record<string, string>;
+        asOf?: string;
+      };
+    }>("SELECT value FROM system_settings WHERE key = 'currency_display'"),
+    database.query<{ display_currency: string }>(
+      "SELECT display_currency FROM users WHERE id = $1",
+      [userId],
     ),
   ]);
   const balances = new Map(
@@ -270,6 +287,36 @@ export async function getWalletSummary(
   const read = (bucket: WalletBucket) =>
     balances.get(bucket) ?? { points: 0n, usdMicros: 0n };
   const earnings = earningsResult.rows[0] ?? { points: "0", usd_micros: "0" };
+  const currencySettings = currencySettingsResult.rows[0]?.value;
+  const displayCurrency = userCurrencyResult.rows[0]?.display_currency ?? "USD";
+  const rate = currencySettings?.rates?.[displayCurrency];
+  const rateMatch = rate?.match(/^([0-9]+)(?:\.([0-9]{1,6}))?$/);
+  const rateMicros = rateMatch
+    ? BigInt(rateMatch[1]!) * 1_000_000n +
+      BigInt((rateMatch[2] ?? "").padEnd(6, "0"))
+    : null;
+  const estimate = (usdMicros: bigint) =>
+    formatUsdMicros((usdMicros * rateMicros!) / 1_000_000n);
+  const asOf = currencySettings?.asOf;
+  const localCurrencyEstimate =
+    currencySettings?.localEstimatesEnabled === true &&
+    displayCurrency !== "USD" &&
+    rate &&
+    rateMicros !== null &&
+    rateMicros > 0n &&
+    asOf &&
+    !Number.isNaN(Date.parse(asOf))
+      ? {
+          currency: displayCurrency,
+          ratePerUsd: rate,
+          asOf: new Date(asOf).toISOString(),
+          pending: estimate(read("pending").usdMicros),
+          validated: estimate(read("validated").usdMicros),
+          mature: estimate(read("mature").usdMicros),
+          withdrawable: estimate(read("withdrawable").usdMicros),
+          totalEarnings: estimate(BigInt(earnings.usd_micros)),
+        }
+      : null;
   return {
     pending: toMoney(read("pending").points, read("pending").usdMicros),
     validated: toMoney(read("validated").points, read("validated").usdMicros),
@@ -289,7 +336,7 @@ export async function getWalletSummary(
     conversion: {
       pointsPerUsd: conversionResult.rows[0]?.points_per_usd ?? "1000",
       sourceCurrency: "USD",
-      localCurrencyEstimate: null,
+      localCurrencyEstimate,
     },
   };
 }

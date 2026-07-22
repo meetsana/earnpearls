@@ -21,7 +21,7 @@ Deploy these independently replaceable units:
 1. A static frontend built from the approved Git commit.
 2. The API container built from `infra/docker/api.Dockerfile`.
 3. One release job that runs database migrations before the API rollout.
-4. The independent email-outbox worker using the same API image.
+4. Independent email-outbox and operations workers using the same API image.
 5. A PostgreSQL 17 database with TLS, automated backups, and point-in-time recovery if
    the selected service supports it.
 
@@ -77,6 +77,7 @@ Run staging with production code paths:
 | `SMTP_URL` | Secret-managed staging SMTP URL |
 | `EMAIL_FROM` | Verified staging sender identity |
 | `EMAIL_WORKER_POLL_MS` | `5000` initially |
+| `OPERATIONS_WORKER_POLL_MS` | `15000` initially |
 
 Generate independent secrets through the selected secret manager. A suitable local
 operator command for the encryption key is `openssl rand -base64 32`; paste the result
@@ -135,7 +136,8 @@ Require all of the following before continuing:
 
 7. Deploy the static frontend with history fallback enabled and same-origin `/v1`
    routing to the API.
-8. Start one email worker only after SMTP connectivity and sender verification pass.
+8. Start one operations worker and start one email worker only after SMTP connectivity and
+   sender verification pass.
 9. Run the administrator seed job once with staging-only credentials and
    `ALLOW_DEMO_DATA=false`. The temporary free-tier exception in
    `STAGING-FREE-TIER.md` uses explicit synthetic data. Remove the seed password from
@@ -170,8 +172,8 @@ tokens, cookies, passwords, full IP addresses, or payout data.
     capabilities through direct API calls.
 11. Confirm API errors use the nested error envelope and expose a request ID without
     revealing stack traces or secrets.
-12. Confirm rate limits, security headers, health alerts, email retries, and dead-letter
-    visibility behave as documented.
+12. Confirm rate limits, security headers, health alerts, email/job retries, recurring
+    operations, and dead-letter visibility behave as documented.
 13. Confirm logs redact cookies, authorization values, secrets, tokens, passwords, and
     payout destinations.
 

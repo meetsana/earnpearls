@@ -43,3 +43,36 @@ export function Offline() {
     </section>
   );
 }
+
+export function Maintenance({ message }: { message: string }) {
+  return (
+    <main className="public-main system-page">
+      <p className="eyebrow">Planned platform pause</p>
+      <PageHeader
+        title="EarnPearls is temporarily unavailable"
+        description={message}
+      />
+      <p>
+        Wallet and reward data remain stored on the server. No financial action
+        is shown as complete during maintenance.
+      </p>
+      <Link className="button button--secondary" to="/login">
+        Administrator sign in
+      </Link>
+    </main>
+  );
+}
+
+export function FeatureUnavailable() {
+  return (
+    <main className="public-main system-page">
+      <PageHeader
+        title="This feature is not available"
+        description="EarnPearls has temporarily hidden this area through a platform feature control."
+      />
+      <Link className="button button--primary" to="/app">
+        Return to dashboard
+      </Link>
+    </main>
+  );
+}

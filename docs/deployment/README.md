@@ -1,58 +1,63 @@
-# EarnPearls MVP Deployment
+# EarnPearls Deployment
 
-## Current deployment model
+## Deployable units
 
-The MVP is a vendor-neutral containerized modular monolith:
+The production-shaped topology is vendor-neutral:
 
-- one stateless API process;
-- one independent email-outbox worker;
-- PostgreSQL as the transactional system of record;
-- a separately deployed static frontend;
-- migrations run as a release job before new API instances start.
+- immutable static React frontend;
+- stateless Fastify API container;
+- one migration release job per release;
+- independent operations and email workers from the same API image;
+- PostgreSQL 17 as transactional database/queue/evidence store;
+- approved SMTP and future provider adapters.
 
-No public cloud vendor or production region is selected by this implementation.
-Those choices remain an owner/infrastructure decision. The container boundary keeps
-the same build deployable to a managed container service or VM without changing the
-domain model.
+Current free-tier staging temporarily supervises API and workers in one Render Docker web
+service because the tier has no free worker/job service. That documented deviation is not a
+production recommendation. See [STAGING-FREE-TIER.md](STAGING-FREE-TIER.md) and the full
+[STAGING-RUNBOOK.md](STAGING-RUNBOOK.md).
 
-For the vendor-neutral staging sequence, acceptance tests, rollback procedure, and
-owner sign-off gates, see [the staging runbook](STAGING-RUNBOOK.md).
-
-## Local database and API
+## Local containers
 
 ```bash
 docker compose -f infra/docker-compose.yml up --build postgres migrate api
 ```
 
-Swagger UI is available at `http://localhost:3001/documentation` in development.
+Optional seed and worker profiles require the relevant environment configuration. Swagger
+is available at `http://localhost:3001/documentation` only when enabled.
 
-To seed a Super Admin, set the three seed variables without committing them and run:
+## Artifact rule
 
-```bash
-docker compose -f infra/docker-compose.yml --profile tools run --rm seed
-```
+Frontend and API image must be built from one immutable Git SHA. Record frontend artifact,
+API image digest, migration result, configuration revision, and previous rollback artifacts.
+Never deploy mutable `latest` without resolving it to a recorded digest.
 
-The optional email worker requires a real SMTP connection URL:
+## Production gate
 
-```bash
-docker compose -f infra/docker-compose.yml --profile email up email-worker
-```
+Before production:
 
-## Production release gate
+1. Select and approve vendor, region, DNS, secret manager, SMTP, logs/errors/uptime, and
+   incident ownership.
+2. Configure PostgreSQL TLS, capacity, encrypted backup/PITR, approved RPO/RTO, and prove a
+   timed isolated restore.
+3. Generate unique secrets; enforce HTTPS exact origins and trusted-proxy policy.
+4. Run the complete release checklist, PostgreSQL 17 tests, image build, CI, CodeQL,
+   dependency/security review, and browser acceptance on the exact SHA.
+5. Approve legal copy, eligibility/countries, privacy/retention, provider contracts/adapters,
+   payout vendor/rules/reserves/KYC/tax, and support/incident processes.
+6. Keep global withdrawals, wallet adjustments, real providers, and methods off until their
+   specific evidence is recorded.
 
-Before any production deployment:
+Use [the release checklist](../operations/RELEASE-CHECKLIST.md) as the authoritative sign-off.
 
-1. Set every variable documented in `.env.example` through a secret manager.
-2. Use a unique password pepper, IP-hash secret, provider secrets, and 32-byte
-   base64 data-encryption key.
-3. Use TLS for PostgreSQL and HTTPS for every frontend origin.
-4. Configure SMTP and verify registration, verification, password reset, security,
-   and withdrawal notifications.
-5. Select the production region, backup retention, RTO/RPO, observability platform,
-   and incident owners.
-6. Approve launch countries, provider adapters, payout methods, thresholds, fees,
-   KYC policy, and provider-specific maturity rules.
-7. Run migrations, tests, dependency audit, CodeQL, restore test, and a security review.
+## Deployment order
 
-Withdrawals and provider integrations remain disabled until their policy and adapter
-configuration is explicitly approved.
+1. Confirm backup/recovery point and previous compatible artifacts.
+2. Build and scan immutable frontend/API artifacts.
+3. Run migrations exactly once; stop on failure/checksum mismatch.
+4. Roll API and require `/health/ready` before traffic.
+5. Start operations worker; start email worker after SMTP verification.
+6. Publish frontend and same-origin `/v1`, `/health`, `/sitemap.xml` routing.
+7. Run critical acceptance, verify queues/monitoring, and observe the release window.
+
+Rollback application artifacts for code defects. Do not improvise database down-migrations;
+use a reviewed forward fix or approved recovery process.

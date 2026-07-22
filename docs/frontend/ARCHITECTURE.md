@@ -7,8 +7,7 @@ application. It consumes only the canonical `/v1` API. The server owns identity,
 capabilities, financial state, survey availability, payout availability, and every
 state transition.
 
-The implementation was recovered from the Fable 5 Notion source mirror and reconciled
-against:
+The implementation is maintained directly in this repository and reconciled against:
 
 - `packages/contracts/src/index.ts`
 - `docs/api/openapi.json`
@@ -34,32 +33,15 @@ server's nested error envelope.
 
 ## Route map
 
-| Browser route | Access | API surface |
-| --- | --- | --- |
-| `/` | Public | None |
-| `/register` | Public | `POST /auth/register` |
-| `/login` | Public | `POST /auth/login`, then `GET /auth/session` |
-| `/verify-email` | Public | `POST /auth/verify-email` |
-| `/forgot-password` | Public | `POST /auth/password-reset/request` |
-| `/reset-password` | Public | `POST /auth/password-reset/confirm` |
-| `/app` | `dashboard.read` | `GET /dashboard/` |
-| `/app/surveys` | `survey.read`; start requires `survey.start` | `GET /surveys/`, `POST /surveys/{id}/start` |
-| `/app/wallet` | `wallet.read` | `GET /wallet/`, `GET /wallet/transactions` |
-| `/app/withdrawals` | `withdrawal.read`; request requires `withdrawal.create` | withdrawal methods, history, and create endpoints |
-| `/app/security` | `security.sessions.manage` | list/revoke sessions, logout-all |
-| `/app/admin` | `admin.dashboard.read` | `GET /admin/dashboard` |
-| `/app/admin/users` | `admin.users.read`; action requires `admin.users.moderate` | users and account-state endpoints |
-| `/app/admin/withdrawals` | `admin.withdrawals.read`; action requires `admin.withdrawals.review` | admin withdrawal endpoints |
-| `/app/admin/reconciliation` | `admin.surveys.reconcile` | participation decisions; wallet settlement appears only with `admin.wallet.settle` |
-| `/app/admin/audit-log` | `admin.audit.read` | `GET /admin/audit-logs` |
+The implementation includes public auth/CMS/blog/FAQ routes; member dashboard, survey,
+wallet, withdrawal, notification, leaderboard, support, profile, and security routes; and
+the full capability-gated administrator operations surface. The maintained route/action/
+capability table is in `docs/product/PRODUCT-BLUEPRINT.md`; exact API operations are generated
+in `docs/api/openapi.json`.
 
 `/dashboard` and `/admin/*` are canonical public entry aliases for `/app` and
 `/app/admin/*`. They enter the same authentication and capability guards; the aliases
 do not grant administrative access.
-
-Reserved capabilities without current routes—`profile.edit`, `admin.wallet.read`,
-`admin.wallet.adjust`, `admin.providers.*`, and `admin.settings.*`—do not produce
-invented UI or endpoints.
 
 ## Financial and mutation safety
 

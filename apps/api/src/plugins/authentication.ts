@@ -85,7 +85,8 @@ export const authenticationPlugin = fp(async (app) => {
        JOIN account_states a ON a.code = u.account_status_code
        WHERE s.token_hash = $1
          AND s.revoked_at IS NULL
-         AND s.expires_at > NOW()`,
+         AND s.expires_at > NOW()
+         AND u.deleted_at IS NULL`,
       [hashToken(token)],
     );
     const row = result.rows[0];

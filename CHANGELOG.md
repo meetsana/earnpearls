@@ -1,5 +1,36 @@
 # Change Log
 
+## 1.0 full-build candidate — 2026-07-22
+
+### Product
+
+- Completed public CMS/blog/FAQ/SEO surface, member profile/preferences/activity,
+  notifications, support center, and weekly/monthly/seasonal leaderboards.
+- Completed the Super Admin operations surface for users, roles, Limit Templates, settings,
+  countries, providers, payout-method definitions, content, communications, email templates,
+  support, jobs, analytics, security, reconciliation, withdrawals, and leaderboards.
+- Added feature and maintenance enforcement at both navigation and direct API boundaries.
+
+### Platform and integrity
+
+- Added the product-domain migration with revisions, append-only evidence, operational jobs,
+  provider settlements, analytics, and dynamic database-backed sitemap.
+- Added operations worker for scheduled publishing, analytics, rankings, broadcasts, and
+  retention; CI runs it fail-fast against PostgreSQL 17.
+- Corrected leaderboard aggregation to prevent reward/survey join multiplication and keep
+  current materializations refreshable while finalized history remains durable.
+- Added audited disabled-first payout-method configuration without enabling real payout or
+  the global withdrawal switch.
+- Added versioned allow-listed email templates and secure worker interpolation.
+
+### Quality and documentation
+
+- Expanded route, policy, migration, ledger, sitemap, template, payout, feature, maintenance,
+  accessibility, and exact-accounting regression coverage.
+- Replaced obsolete parallel handoffs with implementation-aligned business/product/system/
+  database/API/security/admin/user/backup/monitoring/release/growth documentation.
+- Preserved all external launch gates: legal, provider, payout, monitoring, and proved restore.
+
 ## Unreleased — 2026-07-21 MVP checkpoint
 
 ### Added
@@ -28,7 +59,7 @@
   conditional external PostgreSQL integration tests.
 - Docker build/Compose baseline, GitHub Actions CI, production dependency audit, CodeQL,
   deployment guide, security policy, and 24-hour build control document.
-- Parallel Opus 4.8 frontend handoff in the repository and Notion.
+- Initial frontend handoff archived after repository consolidation.
 
 ### Security and integrity
 

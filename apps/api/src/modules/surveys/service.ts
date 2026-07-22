@@ -4,10 +4,12 @@ import type { Survey, SurveyStartResponseSchema } from "@earnpearls/contracts";
 import type { Static } from "@sinclair/typebox";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
+import { writeUserActivity } from "../../lib/activity.js";
 import { writeAudit } from "../../lib/audit.js";
 import { hashIp } from "../../lib/crypto.js";
 import { AppError } from "../../lib/errors.js";
 import { toMoney } from "../../lib/money.js";
+import { createNotification } from "../notifications/service.js";
 import {
   createInitialWalletCredit,
   transitionWalletTransaction,
@@ -31,27 +33,49 @@ type SurveyRow = Readonly<{
   launch_url: string;
   active: boolean;
   provider_enabled: boolean;
+  schedule_available: boolean;
 }>;
 
 export async function listAvailableSurveys(
   app: FastifyInstance,
   countryCode: string,
+  options: Readonly<{
+    category?: string;
+    difficulty?: string;
+    device?: string;
+    sort?: "reward_desc" | "time_asc" | "newest";
+  }> = {},
 ): Promise<Survey[]> {
   const result = await app.db.query<SurveyRow>(
     `SELECT s.id, s.provider_id, p.code AS provider_code, s.title,
       s.reward_points::TEXT, s.reward_usd_micros::TEXT,
       s.estimated_minutes, s.difficulty, s.category,
       s.country_codes, s.device_types, s.launch_url,
-      s.active, p.enabled AS provider_enabled
+      s.active, p.enabled AS provider_enabled,
+      ((s.available_from IS NULL OR s.available_from <= NOW())
+        AND (s.available_until IS NULL OR s.available_until > NOW()))
+        AS schedule_available
      FROM surveys s
      JOIN providers p ON p.id = s.provider_id
      WHERE s.active = TRUE AND p.enabled = TRUE
        AND (s.available_from IS NULL OR s.available_from <= NOW())
        AND (s.available_until IS NULL OR s.available_until > NOW())
        AND (CARDINALITY(s.country_codes) = 0 OR $1 = ANY(s.country_codes))
-     ORDER BY s.reward_points DESC, s.created_at DESC
+       AND ($2::TEXT IS NULL OR s.category = $2)
+       AND ($3::TEXT IS NULL OR s.difficulty = $3)
+       AND ($4::TEXT IS NULL OR $4 = ANY(s.device_types))
+     ORDER BY
+       CASE WHEN $5 = 'reward_desc' THEN s.reward_points END DESC,
+       CASE WHEN $5 = 'time_asc' THEN s.estimated_minutes END ASC NULLS LAST,
+       s.created_at DESC
      LIMIT 200`,
-    [countryCode],
+    [
+      countryCode,
+      options.category ?? null,
+      options.difficulty ?? null,
+      options.device ?? null,
+      options.sort ?? "reward_desc",
+    ],
   );
   return result.rows.map((row) => ({
     id: row.id,
@@ -63,7 +87,87 @@ export async function listAvailableSurveys(
     deviceCompatibility: row.device_types,
     countryEligible:
       row.country_codes.length === 0 || row.country_codes.includes(countryCode),
-    available: row.active && row.provider_enabled,
+    available: row.active && row.provider_enabled && row.schedule_available,
+  }));
+}
+
+export async function getSurvey(
+  app: FastifyInstance,
+  countryCode: string,
+  surveyId: string,
+): Promise<Survey> {
+  const result = await app.db.query<SurveyRow>(
+    `SELECT s.id, s.provider_id, p.code AS provider_code, s.title,
+      s.reward_points::TEXT, s.reward_usd_micros::TEXT,
+      s.estimated_minutes, s.difficulty, s.category,
+      s.country_codes, s.device_types, s.launch_url,
+      s.active, p.enabled AS provider_enabled,
+      ((s.available_from IS NULL OR s.available_from <= NOW())
+        AND (s.available_until IS NULL OR s.available_until > NOW()))
+        AS schedule_available
+     FROM surveys s JOIN providers p ON p.id = s.provider_id
+     WHERE s.id = $1`,
+    [surveyId],
+  );
+  const row = result.rows[0];
+  if (!row) throw new AppError(404, "SURVEY_NOT_FOUND", "Survey not found.");
+  const countryEligible =
+    row.country_codes.length === 0 || row.country_codes.includes(countryCode);
+  return {
+    id: row.id,
+    title: row.title,
+    reward: toMoney(BigInt(row.reward_points), BigInt(row.reward_usd_micros)),
+    estimatedMinutes: row.estimated_minutes,
+    difficulty: row.difficulty,
+    category: row.category,
+    deviceCompatibility: row.device_types,
+    countryEligible,
+    available:
+      row.active &&
+      row.provider_enabled &&
+      row.schedule_available &&
+      countryEligible,
+  };
+}
+
+export async function listSurveyHistory(
+  app: FastifyInstance,
+  userId: string,
+  limit: number,
+) {
+  const result = await app.db.query<{
+    id: string;
+    survey_id: string;
+    title: string;
+    status: "started" | "completed" | "pending" | "validated" | "rejected";
+    reward_points: string;
+    reward_usd_micros: string;
+    started_at: Date;
+    completed_at: Date | null;
+    provider_confirmed_at: Date | null;
+    estimated_maturity_at: Date | null;
+    rejection_reason: string | null;
+  }>(
+    `SELECT sp.id, sp.survey_id, s.title, sp.status,
+      sp.reward_points::TEXT, sp.reward_usd_micros::TEXT,
+      sp.started_at, sp.completed_at, sp.provider_confirmed_at,
+      sp.estimated_maturity_at, sp.rejection_reason
+     FROM survey_participations sp
+     JOIN surveys s ON s.id = sp.survey_id
+     WHERE sp.user_id = $1 ORDER BY sp.created_at DESC, sp.id DESC LIMIT $2`,
+    [userId, limit],
+  );
+  return result.rows.map((row) => ({
+    id: row.id,
+    surveyId: row.survey_id,
+    title: row.title,
+    status: row.status,
+    reward: toMoney(BigInt(row.reward_points), BigInt(row.reward_usd_micros)),
+    startedAt: row.started_at.toISOString(),
+    completedAt: row.completed_at?.toISOString() ?? null,
+    providerConfirmedAt: row.provider_confirmed_at?.toISOString() ?? null,
+    estimatedMaturityAt: row.estimated_maturity_at?.toISOString() ?? null,
+    rejectionReason: row.rejection_reason,
   }));
 }
 
@@ -79,7 +183,10 @@ export async function startSurvey(
       s.reward_points::TEXT, s.reward_usd_micros::TEXT,
       s.estimated_minutes, s.difficulty, s.category,
       s.country_codes, s.device_types, s.launch_url,
-      s.active, p.enabled AS provider_enabled
+      s.active, p.enabled AS provider_enabled,
+      ((s.available_from IS NULL OR s.available_from <= NOW())
+        AND (s.available_until IS NULL OR s.available_until > NOW()))
+        AS schedule_available
      FROM surveys s
      JOIN providers p ON p.id = s.provider_id
      WHERE s.id = $1
@@ -137,6 +244,14 @@ export async function startSurvey(
       outcome: "success",
       requestId: request.id,
       ipHash: hashIp(request.ip, app.config.ipHashSecret),
+      metadata: { surveyId: survey.id },
+    });
+    await writeUserActivity(client, {
+      userId: auth.user.id,
+      eventType: "survey.started",
+      summary: `Survey started: ${survey.title}`,
+      targetType: "survey_participation",
+      targetId: participationId,
       metadata: { surveyId: survey.id },
     });
   });
@@ -311,6 +426,36 @@ export async function processProviderEvent(
         [participation.id, event.reason],
       );
     }
+
+    const notificationCopy =
+      event.outcome === "validated"
+        ? {
+            title: "Reward validated",
+            body: "A completed survey reward has been validated.",
+          }
+        : event.outcome === "rejected"
+          ? {
+              title: "Survey reward rejected",
+              body: `A survey reward was rejected: ${event.reason}`,
+            }
+          : {
+              title: "Survey reward pending",
+              body: "A completed survey is waiting for provider validation.",
+            };
+    await createNotification(client, {
+      userId: participation.user_id,
+      category: "reward",
+      ...notificationCopy,
+      actionUrl: "/app/wallet",
+    });
+    await writeUserActivity(client, {
+      userId: participation.user_id,
+      eventType: `survey.${event.outcome}`,
+      summary: notificationCopy.title,
+      targetType: "survey_participation",
+      targetId: participation.id,
+      metadata: { evidenceReference: event.evidenceReference },
+    });
 
     await client.query(
       `UPDATE provider_events SET processing_status = 'processed', processed_at = NOW()

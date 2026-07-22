@@ -11,7 +11,7 @@ they do not select the production vendors.
 | Frontend | Render Static Site | Frankfurt edge, `staging` branch, immutable `dist/` artifact |
 | API | Render Free Web Service | Frankfurt, Docker, one instance, readiness check |
 | Database | Neon Free | PostgreSQL 17, AWS Frankfurt (`aws-eu-central-1`), direct TLS URL |
-| Queue | PostgreSQL outbox | `email_outbox` with `FOR UPDATE SKIP LOCKED`; no unused Redis |
+| Queue | PostgreSQL outbox/jobs | `email_outbox` and `background_job_runs` with `FOR UPDATE SKIP LOCKED`; no unused Redis |
 | Email | Resend Free | SMTP over implicit TLS on port `2465` |
 | Survey data | Built-in demo adapter | Synthetic records only; no vendor contract or credential |
 | Payout data | Disabled demo methods | Display-only PayPal/Virtual Visa labels plus one terminal rejected synthetic history row; no live request |
@@ -21,8 +21,8 @@ Base release: PR #3 merge commit
 
 ## Why Redis is not provisioned
 
-The MVP has no cache contract and its durable email queue is already implemented as a
-PostgreSQL transactional outbox. Adding Redis would not be used by the application and
+Version 1 has no cache contract and its durable email and operations queues are already
+implemented in PostgreSQL. Adding Redis would not be used by the application and
 would introduce an extra credential, network dependency, and failure mode. Add Redis
 only when a reviewed queue/cache consumer exists.
 
@@ -81,14 +81,17 @@ temporary sequence inside the single Docker service:
 1. Run checksum-verified, advisory-locked migrations.
 2. Seed the synthetic administrator and demo records when both seed credentials exist.
 3. Remove seed credentials from the API and worker child-process environments.
-4. Start the API and email worker together.
-5. Terminate the service if either runtime process exits unexpectedly.
+4. Start the API and independently supervised operations worker.
+5. Start the independently supervised email worker when SMTP is configured; otherwise
+   preserve queued mail and log the deliberate staging limitation.
+6. Restart a failed worker with bounded backoff and terminate the service if the critical
+   API process exits.
 
 After the first successful administrator login, delete `SEED_ADMIN_EMAIL`,
 `SEED_ADMIN_PASSWORD`, and `SEED_ADMIN_COUNTRY` from the Render service and redeploy.
 Subsequent starts will skip seeding.
 
-Production must return to the independently deployable release job, API, and worker
+Production must return to the independently deployable release job, API, and workers
 topology in `STAGING-RUNBOOK.md`.
 
 ## Required verification

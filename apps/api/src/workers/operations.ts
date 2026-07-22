@@ -301,7 +301,7 @@ async function snapshotDefinition(
      INSERT INTO leaderboard_entries (
       id, period_id, user_id, rank, metric_value,
       points_earned, surveys_completed
-     ) SELECT md5($5::TEXT || user_id::TEXT)::UUID, $5, user_id, rank,
+     ) SELECT md5($5::TEXT || user_id::TEXT)::UUID, $5::UUID, user_id, rank,
       CASE WHEN $4='surveys_completed' THEN surveys_completed
         ELSE points_earned END,
       points_earned, surveys_completed

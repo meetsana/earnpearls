@@ -53,6 +53,10 @@ server's nested error envelope.
 | `/app/admin/reconciliation` | `admin.surveys.reconcile` | participation decisions; wallet settlement appears only with `admin.wallet.settle` |
 | `/app/admin/audit-log` | `admin.audit.read` | `GET /admin/audit-logs` |
 
+`/dashboard` and `/admin/*` are canonical public entry aliases for `/app` and
+`/app/admin/*`. They enter the same authentication and capability guards; the aliases
+do not grant administrative access.
+
 Reserved capabilities without current routes—`profile.edit`, `admin.wallet.read`,
 `admin.wallet.adjust`, `admin.providers.*`, and `admin.settings.*`—do not produce
 invented UI or endpoints.

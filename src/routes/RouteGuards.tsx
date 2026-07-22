@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 import type { Capability } from "../api/types";
 import { ErrorNotice, LoadingState } from "../components/AsyncStates";
@@ -8,11 +8,20 @@ import { AccessDenied } from "./system";
 
 export function RequireAuthentication({ children }: { children: ReactNode }) {
   const { state, refresh } = useSessionContext();
+  const location = useLocation();
 
   if (state.status === "loading")
     return <LoadingState label="Checking your session" />;
   if (state.status === "unauthenticated")
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{
+          returnTo: `${location.pathname}${location.search}${location.hash}`,
+        }}
+      />
+    );
   if (state.status === "error")
     return <ErrorNotice error={state.error} onRetry={refresh} />;
   return <>{children}</>;

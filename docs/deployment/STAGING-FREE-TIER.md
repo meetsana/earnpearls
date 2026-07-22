@@ -95,8 +95,9 @@ topology in `STAGING-RUNBOOK.md`.
 
 1. Confirm GitHub CI and CodeQL pass on the exact `staging` head.
 2. Confirm Render reports the API readiness check healthy.
-3. Open the static-site URL and directly load `/login`, `/dashboard`, and `/admin` to
-   verify history fallback.
+3. Open the static-site URL and directly load `/login`, `/dashboard` (the `/app`
+   alias), and `/admin` (the `/app/admin` alias) to verify history fallback and the
+   protected-entry redirects.
 4. Call `/health/live` and `/health/ready` through the static-site origin.
 5. Register a synthetic user, receive the Resend verification email, verify it, sign
    in, sign out, and complete a password reset.

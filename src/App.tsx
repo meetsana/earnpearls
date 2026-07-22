@@ -1,4 +1,10 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 
 import { AppShell } from "./components/AppShell";
 import { SessionProvider } from "./session/SessionProvider";
@@ -25,12 +31,25 @@ export function CanonicalIndexRedirect() {
   return <Navigate replace to="/" />;
 }
 
+export function CanonicalDashboardRedirect() {
+  return <Navigate replace to="/app" />;
+}
+
+export function CanonicalAdminRedirect() {
+  const { pathname, search, hash } = useLocation();
+  const subpath = pathname.slice("/admin".length);
+
+  return <Navigate replace to={`/app/admin${subpath}${search}${hash}`} />;
+}
+
 export function App() {
   return (
     <BrowserRouter>
       <SessionProvider>
         <Routes>
           <Route path="/index.html" element={<CanonicalIndexRedirect />} />
+          <Route path="/dashboard" element={<CanonicalDashboardRedirect />} />
+          <Route path="/admin/*" element={<CanonicalAdminRedirect />} />
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />

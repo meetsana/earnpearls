@@ -1,5 +1,10 @@
 import { useState, type FormEvent, type ReactNode } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 
 import { api } from "../api/endpoints";
 import { ErrorNotice, InlineSuccess } from "../components/AsyncStates";
@@ -226,9 +231,27 @@ export function Register() {
   );
 }
 
+export function resolvePostLoginPath(state: unknown): string {
+  if (typeof state !== "object" || state === null || !("returnTo" in state)) {
+    return "/app";
+  }
+
+  const returnTo = (state as { returnTo?: unknown }).returnTo;
+  if (typeof returnTo !== "string") return "/app";
+
+  const isProtectedAppPath =
+    returnTo === "/app" ||
+    returnTo.startsWith("/app/") ||
+    returnTo.startsWith("/app?") ||
+    returnTo.startsWith("/app#");
+
+  return isProtectedAppPath ? returnTo : "/app";
+}
+
 export function Login() {
   const action = useAsyncAction<unknown>();
   const { refresh } = useSessionContext();
+  const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -238,7 +261,7 @@ export function Login() {
     const result = await action.run(() => api.auth.login({ email, password }));
     if (result !== null) {
       await refresh();
-      navigate("/app", { replace: true });
+      navigate(resolvePostLoginPath(location.state), { replace: true });
     }
   }
 

@@ -13,6 +13,7 @@ function runProcess(label, script, environment) {
       `[staging] ${label} failed to start: ${error.message}\n`,
     );
   });
+  child._label = label;
   return child;
 }
 
@@ -51,16 +52,27 @@ function requirePair(environment, left, right) {
 
 async function main() {
   const deploymentEnvironment = { ...process.env };
-  if (!deploymentEnvironment.SMTP_URL) {
-    throw new Error("SMTP_URL is required for staging email verification");
+
+  // Determine if email worker should run
+  const mailMailer = deploymentEnvironment.MAIL_MAILER || "smtp";
+  const isLogMailer = mailMailer === "log";
+  const hasSmtpUrl = Boolean(deploymentEnvironment.SMTP_URL);
+  const shouldRunEmailWorker = !isLogMailer && hasSmtpUrl;
+
+  if (isLogMailer) {
+    console.log("[staging] MAIL_MAILER=log → email worker disabled");
+  } else if (!hasSmtpUrl) {
+    console.warn("[staging] SMTP_URL not set → email worker disabled (real emails will not be sent)");
   }
 
+  // Run migrations
   await runOnce(
     "database migration",
     "dist/db/migrate.js",
     deploymentEnvironment,
   );
 
+  // Seed admin if both seed variables exist
   const shouldSeed = requirePair(
     deploymentEnvironment,
     "SEED_ADMIN_EMAIL",
@@ -70,20 +82,31 @@ async function main() {
     await runOnce("staging seed", "dist/db/seed.js", deploymentEnvironment);
   }
 
+  // Prepare runtime environment: remove seed variables
   const runtimeEnvironment = { ...deploymentEnvironment };
   delete runtimeEnvironment.SEED_ADMIN_EMAIL;
   delete runtimeEnvironment.SEED_ADMIN_PASSWORD;
   delete runtimeEnvironment.SEED_ADMIN_COUNTRY;
 
+  // API environment: we can keep SMTP_URL; API uses configured mailer
   const apiEnvironment = { ...runtimeEnvironment };
-  delete apiEnvironment.SMTP_URL;
 
+  // Start API
   const api = runProcess("API", "dist/server.js", apiEnvironment);
-  const email = runProcess(
-    "email worker",
-    "dist/workers/email.js",
-    runtimeEnvironment,
-  );
+
+  // Start email worker conditionally
+  let email = null;
+  if (shouldRunEmailWorker) {
+    email = runProcess(
+      "email worker",
+      "dist/workers/email.js",
+      runtimeEnvironment,
+    );
+  } else {
+    console.log("[staging] email worker not started (skipped)");
+  }
+
+  // Set up termination signal
   const signal = new Promise((resolve) => {
     process.once("SIGTERM", () =>
       resolve({ label: "supervisor", signal: "SIGTERM" }),
@@ -92,33 +115,38 @@ async function main() {
       resolve({ label: "supervisor", signal: "SIGINT" }),
     );
   });
-  const firstExit = await Promise.race([
-    waitForExit("API", api),
-    waitForExit("email worker", email),
-    signal,
-  ]);
+
+  // Wait for first exit
+  const processes = [api];
+  if (email) processes.push(email);
+  const exitPromises = processes.map(p => waitForExit(p._label, p));
+  const firstExit = await Promise.race([...exitPromises, signal]);
 
   const expectedSignal = firstExit.label === "supervisor";
   process.stderr.write(
     `[staging] ${firstExit.label} requested shutdown (${firstExit.signal ?? `exit ${String(firstExit.code)}`})\n`,
   );
-  for (const child of [api, email]) {
-    if (child.exitCode === null && child.signalCode === null)
+
+  // Terminate all processes
+  for (const child of processes) {
+    if (child.exitCode === null && child.signalCode === null) {
       child.kill("SIGTERM");
+    }
   }
 
+  // Force kill after timeout
   const force = setTimeout(() => {
-    for (const child of [api, email]) {
-      if (child.exitCode === null && child.signalCode === null)
+    for (const child of processes) {
+      if (child.exitCode === null && child.signalCode === null) {
         child.kill("SIGKILL");
+      }
     }
   }, 10_000);
   force.unref();
-  await Promise.allSettled([
-    waitForExit("API", api),
-    waitForExit("email worker", email),
-  ]);
+
+  await Promise.allSettled(processes.map(p => waitForExit(p._label, p)));
   clearTimeout(force);
+
   process.exitCode = expectedSignal ? 0 : 1;
 }
 

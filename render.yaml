@@ -90,6 +90,9 @@ services:
         name: Cache-Control
         value: no-cache
     routes:
+      - type: redirect
+        source: /index.html
+        destination: /
       - type: rewrite
         source: /v1/*
         destination: https://earnpearls-staging-api-meetsana.onrender.com/v1/*

@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./components/AppShell";
 import { SessionProvider } from "./session/SessionProvider";
@@ -21,11 +21,16 @@ import {
 } from "./routes/public";
 import { NotFound } from "./routes/system";
 
+export function CanonicalIndexRedirect() {
+  return <Navigate replace to="/" />;
+}
+
 export function App() {
   return (
     <BrowserRouter>
       <SessionProvider>
         <Routes>
+          <Route path="/index.html" element={<CanonicalIndexRedirect />} />
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
